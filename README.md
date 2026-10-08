@@ -6,7 +6,7 @@
 
 <img src="src/SleepTimer.App/Assets/night-banner.png" alt="Moonlit sky above a quiet lake" width="900" />
 
-[GitHub project](https://github.com/Firefly3002/sleep-timer) · [More projects by Firefly](https://sparkfly.online/projects)
+[Download the latest release](https://github.com/Firefly3002/sleep-timer/releases/latest) · [GitHub source](https://github.com/Firefly3002/sleep-timer) · [More projects by Firefly](https://sparkfly.online/projects)
 
 </div>
 
@@ -21,7 +21,17 @@ Sleep Timer is a Windows desktop app for choosing what happens when a countdown 
 - Keep an optional draggable, resizable countdown widget on the desktop. Its moonlit background reflects timer progress.
 - Open the app at Windows sign-in and choose whether the saved countdown also starts then.
 
-## Artwork
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/warning-preview.png" alt="Sleep Timer warning preview with countdown, progress bar, snooze and cancel controls" width="480" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/quick-timers.png" alt="Sleep Timer quick timer buttons, labeled as adding time to the active countdown" width="900" />
+</p>
+
+## App artwork
 
 <p align="center">
   <img src="src/SleepTimer.App/Assets/sleep-timer.png" alt="Sleep Timer app icon" height="150" />
