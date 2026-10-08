@@ -24,11 +24,15 @@ Sleep Timer is a Windows desktop app for choosing what happens when a countdown 
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/warning-preview.png" alt="Sleep Timer warning preview with countdown, progress bar, snooze and cancel controls" width="480" />
+  <img src="docs/screenshots/timer-home.png" alt="Sleep Timer active countdown with quick timer buttons and restart and cancel controls" width="900" />
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/quick-timers.png" alt="Sleep Timer quick timer buttons, labeled as adding time to the active countdown" width="900" />
+  <img src="docs/screenshots/warning-preview.png" alt="Sleep Timer warning preview with countdown, progress bar, snooze and cancel controls" width="900" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/settings-timer.png" alt="Sleep Timer settings for the saved countdown and Windows sign-in launch" width="900" />
 </p>
 
 ## App artwork
