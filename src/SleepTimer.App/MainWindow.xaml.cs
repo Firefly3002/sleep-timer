@@ -57,8 +57,8 @@ public partial class MainWindow : Window
             TimeCaption.Text = "ACTION BEGINS IN";
             TimeLabel.Text = FormatRemaining(snapshot.Remaining);
             TimeDescriptor.Text = ActionPresentation.TimerDescription(action);
-            HeroTitleText.Text = "Still watching?";
-            DetailLabel.Text = "Snooze for a little more time, or cancel to keep your computer on.";
+            HeroTitleText.Text = "Your timer is almost up.";
+            DetailLabel.Text = "Snooze to add more time, or cancel the timer to stop the selected action.";
             ActionLabel.Text = $"{actionTitle} · FINAL CHECK-IN";
             var warningProgress = snapshot.PhaseDuration <= TimeSpan.Zero
                 ? 0

@@ -40,13 +40,13 @@ internal static class ActionPresentation
 
     public static string WarningMessage(PowerActionRequest request) => request.Action switch
     {
-        PowerAction.Sleep => "Your computer will go to sleep unless you choose what happens next.",
-        PowerAction.ShutDown => "Your computer will shut down unless you cancel.",
-        PowerAction.Restart => "Your computer will restart unless you cancel.",
-        PowerAction.Lock => "Windows will lock unless you cancel.",
-        PowerAction.CloseApp => $"Sleep Timer will ask {DisplayProcessName(request.CloseAppProcessName)} to close unless you cancel.",
-        PowerAction.RunProgram => $"{DisplayProgramName(request.CustomProgramPath)} will start unless you cancel.",
-        _ => "The selected action will run unless you cancel."
+        PowerAction.Sleep => "Your computer will go to sleep soon. Snooze for more time, or cancel the timer to keep it awake.",
+        PowerAction.ShutDown => "Your computer will shut down soon. Snooze for more time, or cancel the timer to stop it.",
+        PowerAction.Restart => "Your computer will restart soon. Snooze for more time, or cancel the timer to stop it.",
+        PowerAction.Lock => "Windows will lock soon. Snooze for more time, or cancel the timer to prevent it.",
+        PowerAction.CloseApp => $"Sleep Timer will ask {DisplayProcessName(request.CloseAppProcessName)} to close soon. Snooze for more time, or cancel the timer to keep it open.",
+        PowerAction.RunProgram => $"{DisplayProgramName(request.CustomProgramPath)} will start soon. Snooze for more time, or cancel the timer to stop it.",
+        _ => "Your timer is almost up. Snooze for more time, or cancel the timer to stop the selected action."
     };
 
     public static string WidgetTooltip(PowerAction action) => action switch

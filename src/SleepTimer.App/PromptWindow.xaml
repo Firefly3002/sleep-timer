@@ -41,8 +41,8 @@
                     <TextBlock Text="☾" FontFamily="Segoe UI Symbol" FontSize="42" Foreground="{StaticResource MoonGold}"
                                HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-5,0,0" />
                 </Border>
-                <TextBlock Text="Still watching?" FontSize="32" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,20,0,0" />
-                <TextBlock x:Name="ActionText" Text="Your computer is ready to sleep." FontSize="15" Foreground="{StaticResource SoftText}"
+                <TextBlock Text="Your timer is almost up" FontSize="32" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,20,0,0" />
+                <TextBlock x:Name="ActionText" Text="Snooze for more time, or cancel the timer to stop the selected action." FontSize="15" Foreground="{StaticResource SoftText}"
                            HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,9,0,0" />
                 <TextBlock x:Name="CountdownLabel" Text="Sleep begins in" FontSize="12" Foreground="{StaticResource SoftText}"
                            HorizontalAlignment="Center" Margin="0,28,0,0" />
