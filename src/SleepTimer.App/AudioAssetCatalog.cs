@@ -20,7 +20,10 @@ internal static class AudioAssetCatalog
     [
         new(AudioSelectionIds.SoftChime, "Soft chime", "soft-chime.wav"),
         new(AudioSelectionIds.WarmBell, "Warm bell", "warm-bell.wav"),
-        new(AudioSelectionIds.NightBird, "Night bird", "night-bird.wav")
+        new(AudioSelectionIds.NightBird, "Night bird", "night-bird.wav"),
+        new(AudioSelectionIds.MoonSparkle, "Moon sparkle", "moon-sparkle.wav"),
+        new(AudioSelectionIds.Stardust, "Stardust", "stardust.wav"),
+        new(AudioSelectionIds.DreamPortal, "Dream portal", "dream-portal.wav")
     ];
 
     public static string? ResolveMusic(AppSettings settings)

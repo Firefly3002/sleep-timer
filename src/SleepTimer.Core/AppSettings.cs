@@ -35,6 +35,9 @@ public static class AudioSelectionIds
     public const string SoftChime = "soft-chime";
     public const string WarmBell = "warm-bell";
     public const string NightBird = "night-bird";
+    public const string MoonSparkle = "moon-sparkle";
+    public const string Stardust = "stardust";
+    public const string DreamPortal = "dream-portal";
 }
 
 public sealed class AppSettings

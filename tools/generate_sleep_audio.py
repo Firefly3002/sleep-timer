@@ -137,6 +137,9 @@ def write_cues() -> None:
         "soft-chime": 2.5,
         "warm-bell": 2.8,
         "night-bird": 2.6,
+        "moon-sparkle": 3.4,
+        "stardust": 3.6,
+        "dream-portal": 4.0,
     }
 
     def soft_chime(t: float, _duration: float) -> float:
@@ -177,13 +180,81 @@ def write_cues() -> None:
                 value += gain * math.sin(phase) * math.exp(-age * 2.4)
         return value
 
-    generators = {"soft-chime": soft_chime, "warm-bell": warm_bell, "night-bird": night_bird}
+    def moon_sparkle(t: float, _duration: float) -> float:
+        value = 0.0
+        for start, note, gain in ((0.02, 84, 0.12), (0.28, 88, 0.10), (0.57, 91, 0.085), (0.9, 96, 0.06)):
+            age = t - start
+            if age < 0:
+                continue
+            frequency = midi(note)
+            strike = (1.0 - math.exp(-age * 48.0)) * math.exp(-age * 1.65)
+            bell = (
+                math.sin(TAU * frequency * age)
+                + 0.28 * math.sin(TAU * frequency * 2.72 * age + 0.16)
+                + 0.09 * math.sin(TAU * frequency * 4.72 * age + 0.35)
+            )
+            value += gain * strike * bell
+        return value
+
+    def stardust(t: float, _duration: float) -> float:
+        value = 0.0
+        sparkles = (
+            (0.04, 92, 0.070), (0.27, 88, 0.072), (0.48, 95, 0.055),
+            (0.77, 91, 0.067), (1.01, 97, 0.048), (1.29, 88, 0.067),
+            (1.53, 94, 0.057), (1.82, 86, 0.063), (2.10, 93, 0.052),
+        )
+        for start, note, gain in sparkles:
+            age = t - start
+            if age < 0:
+                continue
+            frequency = midi(note)
+            decay = math.exp(-age * 3.2)
+            shimmer = (
+                math.sin(TAU * frequency * age)
+                + 0.20 * math.sin(TAU * frequency * 2.01 * age + 0.4)
+                + 0.08 * math.sin(TAU * frequency * 3.97 * age + 0.7)
+            )
+            value += gain * decay * shimmer
+        return value
+
+    def dream_portal(t: float, duration: float) -> float:
+        progress = min(1.0, max(0.0, t / duration))
+        frequency = 330.0 + 360.0 * math.sin(math.pi * progress)
+        phase = TAU * (330.0 * t + 360.0 * duration / math.pi * (1.0 - math.cos(math.pi * progress)))
+        swell = math.sin(math.pi * progress) ** 1.4
+        value = 0.048 * swell * math.sin(phase)
+        value += 0.016 * swell * math.sin(phase * 1.503 + 0.3)
+        for start, note, gain in ((0.58, 76, 0.055), (1.25, 81, 0.045), (1.92, 84, 0.035)):
+            age = t - start
+            if age < 0:
+                continue
+            frequency = midi(note)
+            decay = math.exp(-age * 2.5)
+            value += gain * decay * (
+                math.sin(TAU * frequency * age)
+                + 0.18 * math.sin(TAU * frequency * 2.76 * age + 0.2)
+            )
+        return value
+
+    generators = {
+        "soft-chime": soft_chime,
+        "warm-bell": warm_bell,
+        "night-bird": night_bird,
+        "moon-sparkle": moon_sparkle,
+        "stardust": stardust,
+        "dream-portal": dream_portal,
+    }
     for cue, seconds in cues.items():
         write_wav(OUTPUT / f"{cue}.wav", seconds, generators[cue])
 
 
 def main() -> None:
     OUTPUT.mkdir(parents=True, exist_ok=True)
+    if sys.argv[1:] == ["--cues-only"]:
+        write_cues()
+        print(f"Generated end cues in {OUTPUT}")
+        return
+
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise SystemExit("FFmpeg is required to encode the bundled music loops as MP3.")

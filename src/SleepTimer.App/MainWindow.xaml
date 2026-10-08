@@ -511,6 +511,9 @@
                                             <ComboBoxItem Content="Soft chime" Tag="soft-chime" />
                                             <ComboBoxItem Content="Warm bell" Tag="warm-bell" />
                                             <ComboBoxItem Content="Night bird" Tag="night-bird" />
+                                            <ComboBoxItem Content="Moon sparkle" Tag="moon-sparkle" />
+                                            <ComboBoxItem Content="Stardust" Tag="stardust" />
+                                            <ComboBoxItem Content="Dream portal" Tag="dream-portal" />
                                             <ComboBoxItem Content="My audio file" Tag="custom" />
                                         </ComboBox>
                                         <Grid Margin="0,7,0,0">

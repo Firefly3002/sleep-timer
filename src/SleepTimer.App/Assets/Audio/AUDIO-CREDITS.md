@@ -2,7 +2,9 @@
 
 ## App-authored audio
 
-Moonlit ambient, Soft piano, and the three end cues are original procedural compositions generated for Sleep Timer by `tools/generate_sleep_audio.py`. They contain no third-party audio samples.
+Moonlit ambient, Soft piano, and the six end cues (Soft chime, Warm bell, Night bird, Moon sparkle, Stardust, and Dream portal) are original procedural compositions generated for Sleep Timer by `tools/generate_sleep_audio.py`. They contain no third-party audio samples.
+
+The YouTube compilation [“15 Magic Sound Effects” by Pizza Hunter Sound](https://www.youtube.com/watch?v=n-s0YCWeqT4) was provided as a creative reference for adding magical-style cues. Its audio is not included, sampled, or copied in the app.
 
 ## Nature mix sources
 
