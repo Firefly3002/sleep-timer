@@ -167,7 +167,7 @@ public partial class DesktopWidgetWindow : Window
 
     private void Widget_ClickOrDrag(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left) return;
+        if (e.ChangedButton != MouseButton.Left || !WidgetClickSurface.IsMouseOver) return;
 
         _mouseDownPosition = e.GetPosition(this);
         _pendingClickOrDrag = true;

@@ -46,7 +46,7 @@
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType={x:Type UniformGrid}}}" Value="False" />
-                        <Condition Property="IsMouseOver" Value="True" />
+                        <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Background" Value="#243B59" />
                     <Setter Property="BorderBrush" Value="#6A83A4" />
@@ -54,7 +54,7 @@
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType={x:Type UniformGrid}}}" Value="True" />
-                        <Condition Property="IsMouseOver" Value="True" />
+                        <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Background" Value="#275A60" />
                     <Setter Property="BorderBrush" Value="#85C9B6" />

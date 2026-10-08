@@ -6,7 +6,10 @@
         Topmost="True" ShowInTaskbar="False" WindowStyle="None" ResizeMode="CanResize"
         AllowsTransparency="True" Background="Transparent" FontFamily="Segoe UI"
         Foreground="{StaticResource BrightText}" WindowStartupLocation="Manual"
-        UseLayoutRounding="True" Closing="Window_Closing">
+        UseLayoutRounding="True" Closing="Window_Closing"
+        PreviewMouseLeftButtonDown="Widget_ClickOrDrag"
+        PreviewMouseLeftButtonUp="Widget_ClickOrDrag_MouseLeftButtonUp"
+        PreviewMouseMove="Widget_ClickOrDrag_MouseMove">
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="5" CornerRadius="30"
                             GlassFrameThickness="0" UseAeroCaptionButtons="False" />
@@ -30,9 +33,6 @@
             <Border x:Name="WidgetProgressFill" Width="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"
                     CornerRadius="29" Background="#07172D" Opacity="1" Panel.ZIndex="1" IsHitTestVisible="False" />
             <Grid x:Name="WidgetClickSurface" Background="Transparent"
-                  MouseLeftButtonDown="Widget_ClickOrDrag"
-                  MouseLeftButtonUp="Widget_ClickOrDrag_MouseLeftButtonUp"
-                  MouseMove="Widget_ClickOrDrag_MouseMove"
                   LostMouseCapture="Widget_ClickOrDrag_LostMouseCapture"
                   Panel.ZIndex="2"
                   ToolTip="Click to open Sleep Timer · drag to move · resize from the corner">
