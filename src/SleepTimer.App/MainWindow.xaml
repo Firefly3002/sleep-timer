@@ -465,7 +465,10 @@
                                         <ComboBox x:Name="SleepMusicTrackCombo" SelectionChanged="SleepMusicTrackCombo_SelectionChanged">
                                             <ComboBoxItem Content="Moonlit ambient" Tag="moonlit-ambient" />
                                             <ComboBoxItem Content="Soft piano" Tag="soft-piano" />
-                                            <ComboBoxItem Content="Rainy night" Tag="rainy-night" />
+                                            <ComboBoxItem Content="Gentle rain" Tag="rainy-night" />
+                                            <ComboBoxItem Content="Night forest" Tag="night-forest" />
+                                            <ComboBoxItem Content="Soft binaural" Tag="soft-binaural"
+                                                          ToolTip="A gentle stereo pulse; headphones make the effect clearer." />
                                             <ComboBoxItem Content="My audio file" Tag="custom" />
                                         </ComboBox>
                                         <Grid Margin="0,7,0,0">

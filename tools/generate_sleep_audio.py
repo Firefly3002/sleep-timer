@@ -7,9 +7,9 @@ The short one-shot cues are written as WAV files.
 from __future__ import annotations
 
 import math
-import random
 import shutil
 import subprocess
+import sys
 import tempfile
 import wave
 from array import array
@@ -44,6 +44,22 @@ def write_wav(path: Path, seconds: float, sample_fn) -> None:
             for frame in range(first, first + count):
                 value = max(-0.98, min(0.98, sample_fn(frame / SAMPLE_RATE, seconds)))
                 samples.append(int(value * 32767))
+            target.writeframesraw(samples.tobytes())
+
+
+def write_stereo_wav(path: Path, seconds: float, sample_fn) -> None:
+    total = int(SAMPLE_RATE * seconds)
+    with wave.open(str(path), "wb") as target:
+        target.setnchannels(2)
+        target.setsampwidth(2)
+        target.setframerate(SAMPLE_RATE)
+        for first in range(0, total, SAMPLE_RATE):
+            count = min(SAMPLE_RATE, total - first)
+            samples = array("h")
+            for frame in range(first, first + count):
+                left, right = sample_fn(frame / SAMPLE_RATE, seconds)
+                samples.append(int(max(-0.98, min(0.98, left)) * 32767))
+                samples.append(int(max(-0.98, min(0.98, right)) * 32767))
             target.writeframesraw(samples.tobytes())
 
 
@@ -106,31 +122,26 @@ def write_music_loops(temp: Path, ffmpeg: str) -> None:
 
     write_wav(temp / "soft-piano.wav", MUSIC_SECONDS, piano_sample)
 
-    rain = random.Random(20261008)
-    low = 0.0
-    lower = 0.0
-    rain_chords = [
-        [(38, 0.48), (50, 0.23), (57, 0.14), (62, 0.10)],
-        [(35, 0.47), (47, 0.23), (54, 0.15), (59, 0.10)],
-        [(31, 0.47), (43, 0.24), (50, 0.15), (55, 0.10)],
-        [(33, 0.47), (45, 0.24), (52, 0.15), (57, 0.10)],
-        [(38, 0.48), (50, 0.23), (57, 0.14), (62, 0.10)],
-        [(35, 0.47), (47, 0.23), (54, 0.15), (59, 0.10)],
+    binaural_chords = [
+        [(38, 0.50), (50, 0.32), (57, 0.18), (62, 0.12), (66, 0.08)],
+        [(35, 0.48), (47, 0.31), (54, 0.18), (59, 0.12), (62, 0.08)],
+        [(31, 0.48), (43, 0.32), (50, 0.18), (55, 0.12), (59, 0.08)],
+        [(33, 0.48), (45, 0.32), (52, 0.18), (57, 0.12), (61, 0.08)],
+        [(38, 0.50), (50, 0.32), (57, 0.18), (62, 0.12), (66, 0.08)],
+        [(35, 0.48), (47, 0.31), (54, 0.18), (59, 0.12), (62, 0.08)],
     ]
 
-    def rain_sample(t: float, duration: float) -> float:
-        nonlocal low, lower
-        white = rain.uniform(-1.0, 1.0)
-        low += (white - low) * 0.055
-        lower += (white - lower) * 0.008
-        waves = 0.68 + 0.15 * math.sin(TAU * t / 23.0) + 0.08 * math.sin(TAU * t / 9.5)
-        rainfall = (0.16 * white + 0.38 * low + 0.24 * lower) * waves
-        warm_bed = pad_sample(rain_chords, t, duration, 0.07)
-        return (rainfall * 0.19 + warm_bed) * envelope(t, duration)
+    def binaural_sample(t: float, duration: float) -> tuple[float, float]:
+        pad = pad_sample(binaural_chords, t, duration, 0.105)
+        slow_breath = 0.82 + 0.18 * math.sin(TAU * t / 60.0)
+        left = (pad * 0.62 + 0.026 * math.sin(TAU * 110.0 * t)) * slow_breath * 2.3
+        right = (pad * 0.62 + 0.026 * math.sin(TAU * 114.0 * t)) * slow_breath * 2.3
+        fade = envelope(t, duration)
+        return left * fade, right * fade
 
-    write_wav(temp / "rainy-night.wav", MUSIC_SECONDS, rain_sample)
+    write_stereo_wav(temp / "soft-binaural.wav", MUSIC_SECONDS, binaural_sample)
 
-    for track in ("moonlit-ambient", "soft-piano", "rainy-night"):
+    for track in ("moonlit-ambient", "soft-piano", "soft-binaural"):
         subprocess.run(
             [
                 ffmpeg,
@@ -143,7 +154,7 @@ def write_music_loops(temp: Path, ffmpeg: str) -> None:
                 "-codec:a",
                 "libmp3lame",
                 "-b:a",
-                "96k",
+                "128k",
                 "-ar",
                 str(SAMPLE_RATE),
                 str(OUTPUT / f"{track}.mp3"),
@@ -214,6 +225,11 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="sleep-timer-audio-") as temp_directory:
         write_music_loops(Path(temp_directory), ffmpeg)
     write_cues()
+    source_audio = ROOT / "tools" / "audio-source"
+    if (source_audio / "gentle-rain.mp3").is_file() and (source_audio / "night-forest.mp3").is_file():
+        subprocess.run([sys.executable, str(ROOT / "tools" / "mix_reference_audio.py")], check=True)
+    else:
+        print("Nature mixes left unchanged. Add both Pixabay MP3s to tools/audio-source and run tools/mix_reference_audio.py to regenerate them.")
     print(f"Generated bundled audio in {OUTPUT}")
 
 

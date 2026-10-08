@@ -29,6 +29,8 @@ public static class AudioSelectionIds
     public const string MoonlitAmbient = "moonlit-ambient";
     public const string SoftPiano = "soft-piano";
     public const string RainyNight = "rainy-night";
+    public const string NightForest = "night-forest";
+    public const string SoftBinaural = "soft-binaural";
 
     public const string SoftChime = "soft-chime";
     public const string WarmBell = "warm-bell";

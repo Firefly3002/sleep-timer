@@ -11,7 +11,9 @@ internal static class AudioAssetCatalog
     [
         new(AudioSelectionIds.MoonlitAmbient, "Moonlit ambient", "moonlit-ambient.mp3"),
         new(AudioSelectionIds.SoftPiano, "Soft piano", "soft-piano.mp3"),
-        new(AudioSelectionIds.RainyNight, "Rainy night", "rainy-night.mp3")
+        new(AudioSelectionIds.RainyNight, "Gentle rain", "rainy-night.mp3"),
+        new(AudioSelectionIds.NightForest, "Night forest", "night-forest.mp3"),
+        new(AudioSelectionIds.SoftBinaural, "Soft binaural", "soft-binaural.mp3")
     ];
 
     public static IReadOnlyList<AudioAsset> EndSounds { get; } =
