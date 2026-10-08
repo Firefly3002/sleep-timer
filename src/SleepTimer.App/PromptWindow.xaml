@@ -28,7 +28,8 @@
             </BeginStoryboard>
         </EventTrigger>
     </Window.Triggers>
-    <Grid x:Name="PromptBackdrop" Background="#E70A1323">
+    <Grid x:Name="PromptBackdrop" Background="#E70A1323"
+          PreviewMouseLeftButtonDown="PromptBackdrop_PreviewMouseLeftButtonDown">
         <Image Source="/SleepTimer;component/Assets/night-banner.png" Stretch="UniformToFill" Opacity="0.15"
                IsHitTestVisible="False" />
         <Border x:Name="PromptCard" MaxWidth="560" Padding="32,30" CornerRadius="26"
