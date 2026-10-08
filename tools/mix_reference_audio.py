@@ -1,8 +1,8 @@
-"""Create new Sleep Timer nature tracks from the two user-selected Pixabay recordings.
+"""Create Sleep Timer nature tracks from three licensed Pixabay recordings.
 
 Put the downloaded source MP3s in tools/audio-source/ (that folder is ignored by
-Git). FFmpeg equalizes and levels each recording, mixes in a Sleep Timer-authored
-stereo chord pad, and crossfades the ending into the beginning for smoother repeats.
+Git). FFmpeg equalizes and levels the recordings, blends an authored stereo chord
+pad into the rain and forest tracks, and crossfades each ending into its beginning.
 """
 
 from __future__ import annotations
@@ -26,6 +26,8 @@ def pad_expressions(style: str) -> tuple[str, str]:
     elif style == "forest":
         left = "(0.018*sin(2*PI*41.2666666667*t)+0.013*sin(2*PI*55*t+0.1)+0.008*sin(2*PI*82.5*t+0.2))"
         right = "(0.013*sin(2*PI*41.2666666667*t+0.1)+0.017*sin(2*PI*55*t+0.2)+0.009*sin(2*PI*82.5*t+0.35))"
+    elif style == "ocean":
+        left, right = "0", "0"
     else:
         raise ValueError(f"Unknown pad style: {style}")
     return f"{left}*{swell}", f"{right}*{swell}"
@@ -57,6 +59,7 @@ def mix_track(
     low_cut: int,
     high_cut: int,
     source_gain_db: int,
+    source_credit: str,
 ) -> None:
     duration = media_duration(source, ffprobe)
     left, right = pad_expressions(style)
@@ -90,7 +93,7 @@ def mix_track(
             "-map", "[out]",
             "-map_metadata", "-1",
             "-metadata", f"title={title} - Sleep Timer mix",
-            "-metadata", "artist=Sleep Timer, with source audio by Eryliaa",
+            "-metadata", f"artist=Sleep Timer, with source audio by {source_credit}",
             "-c:a", "libmp3lame",
             "-b:a", "192k",
             "-ar", str(SAMPLE_RATE),
@@ -108,16 +111,18 @@ def main() -> None:
 
     rain_source = SOURCE_DIR / "gentle-rain.mp3"
     forest_source = SOURCE_DIR / "night-forest.mp3"
-    missing = [path.name for path in (rain_source, forest_source) if not path.is_file()]
+    ocean_source = SOURCE_DIR / "ocean-waves.mp3"
+    missing = [path.name for path in (rain_source, forest_source, ocean_source) if not path.is_file()]
     if missing:
         raise SystemExit(
-            "Download the two Pixabay source MP3s into tools/audio-source before mixing: "
+            "Download the three Pixabay source MP3s into tools/audio-source before mixing: "
             + ", ".join(missing)
         )
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    mix_track(ffmpeg, ffprobe, rain_source, OUTPUT_DIR / "rainy-night.mp3", "Gentle rain", "rain", 55, 14_000, 6)
-    mix_track(ffmpeg, ffprobe, forest_source, OUTPUT_DIR / "night-forest.mp3", "Night forest", "forest", 40, 10_500, 12)
+    mix_track(ffmpeg, ffprobe, rain_source, OUTPUT_DIR / "rainy-night.mp3", "Gentle rain", "rain", 55, 14_000, 6, "Eryliaa")
+    mix_track(ffmpeg, ffprobe, forest_source, OUTPUT_DIR / "night-forest.mp3", "Night forest", "forest", 40, 10_500, 12, "Eryliaa")
+    mix_track(ffmpeg, ffprobe, ocean_source, OUTPUT_DIR / "ocean-waves.mp3", "Ocean waves", "ocean", 40, 16_000, 10, "esh9419 (Freesound)")
     print(f"Mixed nature tracks into {OUTPUT_DIR}")
 
 

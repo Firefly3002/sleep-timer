@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shell;
 using System.Windows.Threading;
 using SleepTimer.Core;
 
@@ -9,6 +10,10 @@ namespace SleepTimer.Desktop;
 
 public partial class PromptWindow : Window
 {
+    private const double FloatingTitleBarHeight = 42;
+    private const double MinimumFloatingContentWidth = 560;
+    private const double MinimumFloatingContentHeight = 620;
+
     private readonly App _app;
     private readonly AppSettings _settings;
     private readonly DispatcherTimer _refreshTimer;
@@ -39,6 +44,9 @@ public partial class PromptWindow : Window
             WindowState = WindowState.Normal;
             WindowStyle = WindowStyle.None;
             ResizeMode = ResizeMode.NoResize;
+            PromptTitleBar.Visibility = Visibility.Collapsed;
+            PromptCard.Margin = new Thickness(0);
+            WindowChrome.SetWindowChrome(this, null);
             Left = 0;
             Top = 0;
             Width = SystemParameters.PrimaryScreenWidth;
@@ -49,13 +57,27 @@ public partial class PromptWindow : Window
         else
         {
             WindowState = WindowState.Normal;
-            WindowStyle = WindowStyle.SingleBorderWindow;
-            ResizeMode = ResizeMode.CanResizeWithGrip;
+            WindowStyle = WindowStyle.None;
+            ResizeMode = ResizeMode.CanResize;
             AllowsTransparency = false;
             Background = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource("NightBackground");
+            PromptBackdrop.Background = Background;
+            PromptTitleBar.Visibility = Visibility.Visible;
+            PromptTitleText.Visibility = settings.PromptScale < 0.6 ? Visibility.Collapsed : Visibility.Visible;
+            PromptCard.Margin = new Thickness(0, FloatingTitleBarHeight, 0, 0);
+            WindowChrome.SetWindowChrome(this, new WindowChrome
+            {
+                CaptionHeight = FloatingTitleBarHeight,
+                ResizeBorderThickness = new Thickness(6),
+                CornerRadius = new CornerRadius(20),
+                GlassFrameThickness = new Thickness(0),
+                UseAeroCaptionButtons = false
+            });
             var workArea = SystemParameters.WorkArea;
-            Width = Math.Min(settings.FloatingWidth * settings.PromptScale, workArea.Width);
-            Height = Math.Min(settings.FloatingHeight * settings.PromptScale, workArea.Height);
+            var baseWidth = Math.Max(settings.FloatingWidth, MinimumFloatingContentWidth);
+            var baseHeight = Math.Max(settings.FloatingHeight, MinimumFloatingContentHeight);
+            Width = Math.Min(baseWidth * settings.PromptScale, workArea.Width);
+            Height = Math.Min(baseHeight * settings.PromptScale + FloatingTitleBarHeight, workArea.Height);
             Topmost = true;
             SetFloatingPosition(settings);
         }
@@ -165,7 +187,7 @@ public partial class PromptWindow : Window
         updated.FloatingLeft = Left;
         updated.FloatingTop = Top;
         updated.FloatingWidth = Width / _settings.PromptScale;
-        updated.FloatingHeight = Height / _settings.PromptScale;
+        updated.FloatingHeight = Math.Max(360, (Height - FloatingTitleBarHeight) / _settings.PromptScale);
         _app.SavePromptPosition(updated);
     }
 }

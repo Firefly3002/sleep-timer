@@ -13,7 +13,7 @@ internal static class AudioAssetCatalog
         new(AudioSelectionIds.SoftPiano, "Soft piano", "soft-piano.mp3"),
         new(AudioSelectionIds.RainyNight, "Gentle rain", "rainy-night.mp3"),
         new(AudioSelectionIds.NightForest, "Night forest", "night-forest.mp3"),
-        new(AudioSelectionIds.SoftBinaural, "Soft binaural", "soft-binaural.mp3")
+        new(AudioSelectionIds.OceanWaves, "Ocean waves", "ocean-waves.mp3")
     ];
 
     public static IReadOnlyList<AudioAsset> EndSounds { get; } =

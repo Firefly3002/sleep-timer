@@ -406,9 +406,9 @@
                                 <StackPanel Grid.Column="2">
                                     <DockPanel Margin="1,0,0,4">
                                         <TextBlock Text="Window size" FontSize="11" Foreground="{StaticResource SoftText}" />
-                                        <TextBlock x:Name="ScaleLabel" Text="100%" Foreground="{StaticResource MoonGold}" DockPanel.Dock="Right" />
+                                        <TextBlock x:Name="ScaleLabel" Text="80%" Foreground="{StaticResource MoonGold}" DockPanel.Dock="Right" />
                                     </DockPanel>
-                                    <Slider x:Name="PromptScaleSlider" Minimum="70" Maximum="140" Value="100"
+                                    <Slider x:Name="PromptScaleSlider" Minimum="30" Maximum="140" Value="80"
                                             TickFrequency="10" IsSnapToTickEnabled="True"
                                             ValueChanged="PromptScaleSlider_ValueChanged" />
                                 </StackPanel>
@@ -467,8 +467,7 @@
                                             <ComboBoxItem Content="Soft piano" Tag="soft-piano" />
                                             <ComboBoxItem Content="Gentle rain" Tag="rainy-night" />
                                             <ComboBoxItem Content="Night forest" Tag="night-forest" />
-                                            <ComboBoxItem Content="Soft binaural" Tag="soft-binaural"
-                                                          ToolTip="A gentle stereo pulse; headphones make the effect clearer." />
+                                            <ComboBoxItem Content="Ocean waves" Tag="ocean-waves" />
                                             <ComboBoxItem Content="My audio file" Tag="custom" />
                                         </ComboBox>
                                         <Grid Margin="0,7,0,0">

@@ -47,22 +47,6 @@ def write_wav(path: Path, seconds: float, sample_fn) -> None:
             target.writeframesraw(samples.tobytes())
 
 
-def write_stereo_wav(path: Path, seconds: float, sample_fn) -> None:
-    total = int(SAMPLE_RATE * seconds)
-    with wave.open(str(path), "wb") as target:
-        target.setnchannels(2)
-        target.setsampwidth(2)
-        target.setframerate(SAMPLE_RATE)
-        for first in range(0, total, SAMPLE_RATE):
-            count = min(SAMPLE_RATE, total - first)
-            samples = array("h")
-            for frame in range(first, first + count):
-                left, right = sample_fn(frame / SAMPLE_RATE, seconds)
-                samples.append(int(max(-0.98, min(0.98, left)) * 32767))
-                samples.append(int(max(-0.98, min(0.98, right)) * 32767))
-            target.writeframesraw(samples.tobytes())
-
-
 def pad_sample(chords, t: float, seconds: float, level: float = 0.12) -> float:
     chord_seconds = 30.0
     chord_index = int(t // chord_seconds) % len(chords)
@@ -122,26 +106,7 @@ def write_music_loops(temp: Path, ffmpeg: str) -> None:
 
     write_wav(temp / "soft-piano.wav", MUSIC_SECONDS, piano_sample)
 
-    binaural_chords = [
-        [(38, 0.50), (50, 0.32), (57, 0.18), (62, 0.12), (66, 0.08)],
-        [(35, 0.48), (47, 0.31), (54, 0.18), (59, 0.12), (62, 0.08)],
-        [(31, 0.48), (43, 0.32), (50, 0.18), (55, 0.12), (59, 0.08)],
-        [(33, 0.48), (45, 0.32), (52, 0.18), (57, 0.12), (61, 0.08)],
-        [(38, 0.50), (50, 0.32), (57, 0.18), (62, 0.12), (66, 0.08)],
-        [(35, 0.48), (47, 0.31), (54, 0.18), (59, 0.12), (62, 0.08)],
-    ]
-
-    def binaural_sample(t: float, duration: float) -> tuple[float, float]:
-        pad = pad_sample(binaural_chords, t, duration, 0.105)
-        slow_breath = 0.82 + 0.18 * math.sin(TAU * t / 60.0)
-        left = (pad * 0.62 + 0.026 * math.sin(TAU * 110.0 * t)) * slow_breath * 2.3
-        right = (pad * 0.62 + 0.026 * math.sin(TAU * 114.0 * t)) * slow_breath * 2.3
-        fade = envelope(t, duration)
-        return left * fade, right * fade
-
-    write_stereo_wav(temp / "soft-binaural.wav", MUSIC_SECONDS, binaural_sample)
-
-    for track in ("moonlit-ambient", "soft-piano", "soft-binaural"):
+    for track in ("moonlit-ambient", "soft-piano"):
         subprocess.run(
             [
                 ffmpeg,
@@ -226,10 +191,11 @@ def main() -> None:
         write_music_loops(Path(temp_directory), ffmpeg)
     write_cues()
     source_audio = ROOT / "tools" / "audio-source"
-    if (source_audio / "gentle-rain.mp3").is_file() and (source_audio / "night-forest.mp3").is_file():
+    required_sources = ("gentle-rain.mp3", "night-forest.mp3", "ocean-waves.mp3")
+    if all((source_audio / name).is_file() for name in required_sources):
         subprocess.run([sys.executable, str(ROOT / "tools" / "mix_reference_audio.py")], check=True)
     else:
-        print("Nature mixes left unchanged. Add both Pixabay MP3s to tools/audio-source and run tools/mix_reference_audio.py to regenerate them.")
+        print("Nature mixes left unchanged. Add the three Pixabay MP3s to tools/audio-source and run tools/mix_reference_audio.py to regenerate them.")
     print(f"Generated bundled audio in {OUTPUT}")
 
 

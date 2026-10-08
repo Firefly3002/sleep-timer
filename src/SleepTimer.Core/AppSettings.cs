@@ -30,7 +30,7 @@ public static class AudioSelectionIds
     public const string SoftPiano = "soft-piano";
     public const string RainyNight = "rainy-night";
     public const string NightForest = "night-forest";
-    public const string SoftBinaural = "soft-binaural";
+    public const string OceanWaves = "ocean-waves";
 
     public const string SoftChime = "soft-chime";
     public const string WarmBell = "warm-bell";
@@ -50,7 +50,8 @@ public sealed class AppSettings
     public int SnoozeMinutes { get; set; } = 15;
     public bool ShowCountdown { get; set; } = true;
     public PromptMode PromptMode { get; set; } = PromptMode.FullScreen;
-    public double PromptScale { get; set; } = 1.0;
+    public double PromptScale { get; set; } = 0.8;
+    public int SettingsSchemaVersion { get; set; }
     public double FloatingWidth { get; set; } = 520;
     public double FloatingHeight { get; set; } = 560;
     public double? FloatingLeft { get; set; }
@@ -78,7 +79,7 @@ public sealed class AppSettings
         InitialTimerMinutes = Math.Clamp(InitialTimerMinutes, 1, 24 * 60);
         WarningSeconds = Math.Clamp(WarningSeconds, 5, 600);
         SnoozeMinutes = Math.Clamp(SnoozeMinutes, 1, 180);
-        PromptScale = double.IsFinite(PromptScale) ? Math.Clamp(PromptScale, 0.7, 1.4) : 1.0;
+        PromptScale = double.IsFinite(PromptScale) ? Math.Clamp(PromptScale, 0.3, 1.4) : 0.8;
         FloatingWidth = double.IsFinite(FloatingWidth) ? Math.Clamp(FloatingWidth, 360, 1000) : 520;
         FloatingHeight = double.IsFinite(FloatingHeight) ? Math.Clamp(FloatingHeight, 360, 1000) : 560;
         WidgetOpacity = double.IsFinite(WidgetOpacity) ? Math.Clamp(WidgetOpacity, 0.0, 1.0) : 0.96;
@@ -87,6 +88,8 @@ public sealed class AppSettings
         SleepMusicSelectionId = string.IsNullOrWhiteSpace(SleepMusicSelectionId)
             ? AudioSelectionIds.MoonlitAmbient
             : SleepMusicSelectionId.Trim();
+        if (string.Equals(SleepMusicSelectionId, "soft-binaural", StringComparison.OrdinalIgnoreCase))
+            SleepMusicSelectionId = AudioSelectionIds.MoonlitAmbient;
         SleepMusicFilePath = (SleepMusicFilePath ?? string.Empty).Trim();
         SleepMusicVolume = Math.Clamp(SleepMusicVolume, 0, 100);
         EndSoundSelectionId = string.IsNullOrWhiteSpace(EndSoundSelectionId)
