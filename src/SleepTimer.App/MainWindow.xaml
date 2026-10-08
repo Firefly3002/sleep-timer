@@ -282,7 +282,7 @@
                         </ControlTemplate>
                     </TabControl.Template>
                     <TabItem Header="Timer">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled"
                                       CanContentScroll="False">
                         <Grid>
                             <Grid.RowDefinitions>
