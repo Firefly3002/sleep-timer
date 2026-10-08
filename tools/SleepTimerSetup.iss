@@ -1,5 +1,5 @@
 #define AppName "Sleep Timer"
-#define AppVersion "1.2.0"
+#define AppVersion "1.3.0"
 #define AppPublisher "Sleep Timer"
 #define AppExecutable "SleepTimer.exe"
 
@@ -30,6 +30,7 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 
 [Files]
 Source: "..\dist\win-x64\SleepTimer.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\win-x64\Assets\Audio\*"; DestDir: "{app}\Assets\Audio"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\src\SleepTimer.App\Assets\sleep-timer.ico"; DestDir: "{app}\Assets"; Flags: ignoreversion
 
 [Icons]

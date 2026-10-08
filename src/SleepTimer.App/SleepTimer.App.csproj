@@ -14,6 +14,9 @@
   <ItemGroup>
     <ProjectReference Include="../SleepTimer.Core/SleepTimer.Core.csproj" />
     <Content Include="Assets\sleep-timer.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Audio\*.mp3" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Audio\*.wav" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Audio\AUDIO-CREDITS.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Resource Include="Assets\sleep-timer.png" />
     <Resource Include="Assets\widget-night-background.png" />
     <Resource Include="Assets\night-banner.png" />

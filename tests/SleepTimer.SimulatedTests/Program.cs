@@ -9,7 +9,12 @@ var checks = new (string Name, Action Run)[]
     ("cancel during the timer prevents a power action", CancelDuringTimer),
     ("cancel during warning prevents a power action", CancelDuringWarning),
     ("restart replaces the current timer", RestartReplacesTimer),
-    ("settings round-trip and preserve widget, launch, layout, and power options", SettingsRoundTrip)
+    ("settings round-trip and preserve widget, launch, layout, power, and audio options", SettingsRoundTrip),
+    ("audio follows timer start, warning, snooze, and action transitions", AudioTimerLifecycle),
+    ("end cue plays before an immediate no-warning power action", AudioCuePrecedesImmediateAction),
+    ("audio playback failures are reported without stopping the timer", AudioFailureIsNonFatal),
+    ("saved audio changes apply live and cancellation stops playback", AudioSettingsApplyLiveAndCancel),
+    ("music preview pauses and resumes the timer soundtrack", AudioPreviewRestoresMusic)
 };
 
 var failed = 0;
@@ -124,6 +129,19 @@ static void SettingsRoundTrip()
         Equal(false, defaults.ShowWidgetOnStartup);
         Equal(true, defaults.WidgetAlwaysOnTop);
         Equal(0.96, defaults.WidgetOpacity);
+        Equal(false, defaults.SleepMusicEnabled);
+        Equal(false, defaults.EndSoundEnabled);
+        Equal(AudioSelectionIds.MoonlitAmbient, defaults.SleepMusicSelectionId);
+        Equal(AudioSelectionIds.SoftChime, defaults.EndSoundSelectionId);
+        Equal(35, defaults.SleepMusicVolume);
+        Equal(65, defaults.EndSoundVolume);
+
+        File.WriteAllText(store.FilePath, "{\"InitialTimerMinutes\":75}");
+        var oldSettings = store.Load();
+        Equal(75, oldSettings.InitialTimerMinutes);
+        Equal(false, oldSettings.SleepMusicEnabled);
+        Equal(false, oldSettings.EndSoundEnabled);
+        Equal(AudioSelectionIds.MoonlitAmbient, oldSettings.SleepMusicSelectionId);
 
         var settings = new AppSettings
         {
@@ -149,7 +167,15 @@ static void SettingsRoundTrip()
             WidgetWidth = 172,
             WidgetHeight = 64,
             WidgetLeft = 820,
-            WidgetTop = 95
+            WidgetTop = 95,
+            SleepMusicEnabled = true,
+            SleepMusicSelectionId = AudioSelectionIds.CustomFile,
+            SleepMusicFilePath = "C:\\Audio\\night-song.mp3",
+            SleepMusicVolume = 28,
+            EndSoundEnabled = true,
+            EndSoundSelectionId = AudioSelectionIds.WarmBell,
+            EndSoundFilePath = "C:\\Audio\\warm-bell.wav",
+            EndSoundVolume = 72
         };
         store.Save(settings);
         var loaded = store.Load();
@@ -176,11 +202,110 @@ static void SettingsRoundTrip()
         Equal(settings.WidgetHeight, loaded.WidgetHeight);
         Equal(settings.WidgetLeft, loaded.WidgetLeft);
         Equal(settings.WidgetTop, loaded.WidgetTop);
+        Equal(settings.SleepMusicEnabled, loaded.SleepMusicEnabled);
+        Equal(settings.SleepMusicSelectionId, loaded.SleepMusicSelectionId);
+        Equal(settings.SleepMusicFilePath, loaded.SleepMusicFilePath);
+        Equal(settings.SleepMusicVolume, loaded.SleepMusicVolume);
+        Equal(settings.EndSoundEnabled, loaded.EndSoundEnabled);
+        Equal(settings.EndSoundSelectionId, loaded.EndSoundSelectionId);
+        Equal(settings.EndSoundFilePath, loaded.EndSoundFilePath);
+        Equal(settings.EndSoundVolume, loaded.EndSoundVolume);
+
+        settings.SleepMusicVolume = -1;
+        settings.EndSoundVolume = 150;
+        settings.Normalize();
+        Equal(0, settings.SleepMusicVolume);
+        Equal(100, settings.EndSoundVolume);
     }
     finally
     {
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
+}
+
+static void AudioTimerLifecycle()
+{
+    var backend = new FakeAudioPlaybackBackend();
+    using var audio = new TimerAudioCoordinator(backend);
+    var settings = new AppSettings { SleepMusicEnabled = true, EndSoundEnabled = true };
+    audio.StartTimer(settings, "ambient.mp3", "chime.wav");
+    Equal(1, backend.MusicStarts);
+    Equal(true, backend.MusicLoopRequested);
+
+    audio.ObserveSnapshot(new TimerSnapshot(TimerPhase.Running, TimeSpan.FromMinutes(1), PowerAction.Sleep, TimeSpan.FromMinutes(1)));
+    audio.ObserveSnapshot(new TimerSnapshot(TimerPhase.Warning, TimeSpan.FromSeconds(60), PowerAction.Sleep, TimeSpan.FromSeconds(60)));
+    Equal(1, backend.CueStarts);
+    audio.ObserveSnapshot(new TimerSnapshot(TimerPhase.Running, TimeSpan.FromMinutes(15), PowerAction.Sleep, TimeSpan.FromMinutes(15)));
+    audio.ObserveSnapshot(new TimerSnapshot(TimerPhase.Warning, TimeSpan.FromSeconds(60), PowerAction.Sleep, TimeSpan.FromSeconds(60)));
+    Equal(2, backend.CueStarts);
+
+    audio.PrepareForPowerActionAsync(warningWasEnabled: true).GetAwaiter().GetResult();
+    Equal(2, backend.CueStarts);
+    Equal(1, backend.MusicStops);
+    Equal(false, backend.CueIsPlaying);
+}
+
+static void AudioCuePrecedesImmediateAction()
+{
+    var backend = new FakeAudioPlaybackBackend();
+    using var audio = new TimerAudioCoordinator(backend);
+    audio.StartTimer(new AppSettings { SleepMusicEnabled = true, EndSoundEnabled = true }, "ambient.mp3", "chime.wav");
+    audio.PrepareForPowerActionAsync(warningWasEnabled: false).GetAwaiter().GetResult();
+    var cueStarted = backend.Events.IndexOf("cue-wait-start");
+    var cueEnded = backend.Events.IndexOf("cue-wait-end");
+    var musicStopped = backend.Events.IndexOf("music-stop");
+    if (cueStarted < 0 || cueEnded <= cueStarted || musicStopped <= cueEnded)
+        throw new InvalidOperationException("The immediate action path did not wait for the end cue before stopping the music.");
+}
+
+static void AudioSettingsApplyLiveAndCancel()
+{
+    var backend = new FakeAudioPlaybackBackend();
+    using var audio = new TimerAudioCoordinator(backend);
+    var settings = new AppSettings();
+    audio.StartTimer(settings, "ambient.mp3", "chime.wav");
+    Equal(0, backend.MusicStarts);
+
+    settings.SleepMusicEnabled = true;
+    settings.SleepMusicVolume = 48;
+    audio.ApplySettings(settings, "ambient.mp3", "chime.wav",
+        new TimerSnapshot(TimerPhase.Running, TimeSpan.FromMinutes(2), PowerAction.Sleep, TimeSpan.FromMinutes(2)));
+    Equal(1, backend.MusicStarts);
+    Equal(48, backend.MusicVolume);
+
+    settings.SleepMusicSelectionId = AudioSelectionIds.SoftPiano;
+    audio.ApplySettings(settings, "piano.mp3", "chime.wav",
+        new TimerSnapshot(TimerPhase.Running, TimeSpan.FromMinutes(1), PowerAction.Sleep, TimeSpan.FromMinutes(2)));
+    Equal(2, backend.MusicStarts);
+    Equal("piano.mp3", backend.MusicSource);
+
+    audio.CancelTimer();
+    Equal(2, backend.MusicStops);
+}
+
+static void AudioFailureIsNonFatal()
+{
+    var backend = new FakeAudioPlaybackBackend();
+    using var audio = new TimerAudioCoordinator(backend);
+    var failures = 0;
+    audio.PlaybackFailed += _ => failures++;
+    audio.StartTimer(new AppSettings { SleepMusicEnabled = true, EndSoundEnabled = true }, "missing.mp3", "chime.wav");
+    Equal(1, failures);
+    audio.ObserveSnapshot(new TimerSnapshot(TimerPhase.Warning, TimeSpan.FromSeconds(60), PowerAction.Sleep, TimeSpan.FromSeconds(60)));
+    Equal(1, backend.CueStarts);
+}
+
+static void AudioPreviewRestoresMusic()
+{
+    var backend = new FakeAudioPlaybackBackend();
+    using var audio = new TimerAudioCoordinator(backend);
+    audio.StartTimer(new AppSettings { SleepMusicEnabled = true }, "ambient.mp3", "chime.wav");
+    audio.PreviewMusic("piano.mp3", 35);
+    Equal(true, audio.IsPreviewingMusic);
+    Equal(1, backend.MusicPauses);
+    audio.StopPreview();
+    Equal(false, audio.IsPreviewingMusic);
+    Equal(1, backend.MusicResumes);
 }
 
 static void Equal<T>(T expected, T actual)
@@ -201,6 +326,60 @@ sealed class Fixture : IDisposable
     }
     public void Advance(TimeSpan elapsed) => Scheduler.Advance(elapsed);
     public void Dispose() => Engine.Dispose();
+}
+
+sealed class FakeAudioPlaybackBackend : IAudioPlaybackBackend
+{
+    public event Action<string>? PlaybackFailed;
+    public event Action? PreviewEnded;
+    public List<string> Events { get; } = [];
+    public int MusicStarts { get; private set; }
+    public int MusicStops { get; private set; }
+    public int MusicPauses { get; private set; }
+    public int MusicResumes { get; private set; }
+    public int CueStarts { get; private set; }
+    public int MusicVolume { get; private set; }
+    public bool MusicLoopRequested { get; private set; }
+    public bool CueIsPlaying { get; private set; }
+    public string? MusicSource { get; private set; }
+    private bool _musicPaused;
+
+    public void PlayMusicLoop(string source, int volume)
+    {
+        if (source == "missing.mp3")
+        {
+            PlaybackFailed?.Invoke("Audio unavailable.");
+            return;
+        }
+        MusicStarts++;
+        MusicSource = source;
+        MusicVolume = volume;
+        MusicLoopRequested = true;
+        Events.Add("music-start");
+    }
+
+    public void SetMusicVolume(int volume) => MusicVolume = volume;
+    public void StopMusic() { MusicStops++; Events.Add("music-stop"); }
+    public void PauseMusic() { MusicPauses++; _musicPaused = true; }
+    public void ResumeMusic() { if (!_musicPaused) return; MusicResumes++; _musicPaused = false; }
+    public void PlayCue(string source, int volume) { CueStarts++; CueIsPlaying = true; Events.Add("cue"); }
+
+    public Task PlayCueToCompletionAsync(string source, int volume, TimeSpan maximumWait)
+    {
+        CueStarts++;
+        CueIsPlaying = true;
+        Events.Add("cue-wait-start");
+        Events.Add("cue-wait-end");
+        CueIsPlaying = false;
+        return Task.CompletedTask;
+    }
+
+    public void StopCue() { CueIsPlaying = false; Events.Add("cue-stop"); }
+    public void PreviewMusic(string source, int volume) { PauseMusic(); Events.Add("preview-music"); }
+    public void PreviewCue(string source, int volume) => Events.Add("preview-cue");
+    public void SetPreviewVolume(int volume) { }
+    public void StopPreview() { Events.Add("preview-stop"); ResumeMusic(); PreviewEnded?.Invoke(); }
+    public void Dispose() { }
 }
 
 sealed class FakeClock : IMonotonicClock

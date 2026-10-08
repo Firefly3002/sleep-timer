@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using SleepTimer.Core;
 using WpfButton = System.Windows.Controls.Button;
+using WpfComboBox = System.Windows.Controls.ComboBox;
 using WpfBrush = System.Windows.Media.Brush;
 using WpfOpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using WpfPoint = System.Windows.Point;
@@ -21,6 +22,9 @@ public partial class MainWindow : Window
     private bool _allowClose;
     private bool _updatingCloseAppSelection;
     private bool _expandedForManualEntry;
+    private bool _updatingAudioControls;
+    private string _sleepMusicFilePath = string.Empty;
+    private string _endSoundFilePath = string.Empty;
 
     public MainWindow()
     {
@@ -172,8 +176,23 @@ public partial class MainWindow : Window
         ShowWidgetOnStartupCheck.IsChecked = settings.ShowWidgetOnStartup;
         WidgetTopmostCheck.IsChecked = settings.WidgetAlwaysOnTop;
         WidgetOpacitySlider.Value = Math.Round(settings.WidgetOpacity * 100 / 5) * 5;
+        _updatingAudioControls = true;
+        try
+        {
+            SleepMusicEnabledCheck.IsChecked = settings.SleepMusicEnabled;
+            EndSoundEnabledCheck.IsChecked = settings.EndSoundEnabled;
+            _sleepMusicFilePath = settings.SleepMusicFilePath;
+            _endSoundFilePath = settings.EndSoundFilePath;
+            SelectAudioItem(SleepMusicTrackCombo, settings.SleepMusicSelectionId);
+            SelectAudioItem(EndSoundTrackCombo, settings.EndSoundSelectionId);
+            SleepMusicVolumeSlider.Value = settings.SleepMusicVolume;
+            EndSoundVolumeSlider.Value = settings.EndSoundVolume;
+            UpdateAudioFileLabels();
+        }
+        finally { _updatingAudioControls = false; }
         UpdatePowerActionOptions();
         UpdateWarningControls();
+        RefreshAudioPreviewState();
     }
 
     private void PrimaryTimerButton_Click(object sender, RoutedEventArgs e)
@@ -426,6 +445,149 @@ public partial class MainWindow : Window
         _app.PreviewWidgetOpacity(e.NewValue / 100.0);
     }
 
+    public void RefreshAudioPreviewState()
+    {
+        if (SleepMusicPreviewButton is not null)
+            SleepMusicPreviewButton.Content = _app.IsMusicPreviewing ? "■  Stop preview" : "▶  Preview music";
+        if (EndSoundPreviewButton is not null)
+            EndSoundPreviewButton.Content = _app.IsEndSoundPreviewing ? "■  Stop preview" : "▶  Preview cue";
+    }
+
+    private void SleepMusicTrackCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_updatingAudioControls) return;
+        _app.StopAudioPreview();
+        UpdateAudioFileLabels();
+    }
+
+    private void EndSoundTrackCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_updatingAudioControls) return;
+        _app.StopAudioPreview();
+        UpdateAudioFileLabels();
+    }
+
+    private void BrowseSleepMusicButton_Click(object sender, RoutedEventArgs e) => BrowseAudioFile(isMusic: true);
+
+    private void BrowseEndSoundButton_Click(object sender, RoutedEventArgs e) => BrowseAudioFile(isMusic: false);
+
+    private void BrowseAudioFile(bool isMusic)
+    {
+        var dialog = new WpfOpenFileDialog
+        {
+            Title = isMusic ? "Choose sleep music" : "Choose a timer-end sound",
+            Filter = "Supported audio (*.mp3;*.wav;*.wma;*.m4a)|*.mp3;*.wav;*.wma;*.m4a",
+            CheckFileExists = true,
+            Multiselect = false
+        };
+        if (dialog.ShowDialog(this) != true) return;
+
+        if (!IsSupportedAudioFile(dialog.FileName))
+        {
+            SetError("Choose an MP3, WAV, WMA, or M4A audio file.");
+            return;
+        }
+
+        _app.StopAudioPreview();
+        _updatingAudioControls = true;
+        try
+        {
+            if (isMusic)
+            {
+                _sleepMusicFilePath = dialog.FileName;
+                SelectAudioItem(SleepMusicTrackCombo, AudioSelectionIds.CustomFile);
+            }
+            else
+            {
+                _endSoundFilePath = dialog.FileName;
+                SelectAudioItem(EndSoundTrackCombo, AudioSelectionIds.CustomFile);
+            }
+            UpdateAudioFileLabels();
+        }
+        finally { _updatingAudioControls = false; }
+    }
+
+    private static bool IsSupportedAudioFile(string path)
+        => Path.GetExtension(path).ToLowerInvariant() is ".mp3" or ".wav" or ".wma" or ".m4a";
+
+    private static void SelectAudioItem(WpfComboBox combo, string selectionId)
+    {
+        var selected = combo.Items.OfType<ComboBoxItem>()
+            .FirstOrDefault(item => string.Equals(item.Tag?.ToString(), selectionId, StringComparison.OrdinalIgnoreCase));
+        combo.SelectedItem = selected ?? combo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+    }
+
+    private static string GetAudioSelectionId(WpfComboBox combo)
+        => (combo.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? string.Empty;
+
+    private void UpdateAudioFileLabels()
+    {
+        if (SleepMusicFileLabel is null || EndSoundFileLabel is null) return;
+        UpdateAudioFileLabel(SleepMusicFileLabel, SleepMusicTrackCombo, _sleepMusicFilePath, "Built-in track");
+        UpdateAudioFileLabel(EndSoundFileLabel, EndSoundTrackCombo, _endSoundFilePath, "Built-in cue");
+    }
+
+    private static void UpdateAudioFileLabel(TextBlock label, WpfComboBox combo, string path, string builtInText)
+    {
+        var isCustom = string.Equals(GetAudioSelectionId(combo), AudioSelectionIds.CustomFile, StringComparison.OrdinalIgnoreCase);
+        var text = !isCustom ? builtInText
+            : string.IsNullOrWhiteSpace(path) ? "Choose an audio file"
+            : Path.GetFileName(path);
+        label.Text = text;
+        label.ToolTip = isCustom && !string.IsNullOrWhiteSpace(path) ? path : text;
+    }
+
+    private void AudioVolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ReferenceEquals(sender, SleepMusicVolumeSlider) && SleepMusicVolumeLabel is not null)
+            SleepMusicVolumeLabel.Text = $"{(int)e.NewValue}%";
+        if (ReferenceEquals(sender, EndSoundVolumeSlider) && EndSoundVolumeLabel is not null)
+            EndSoundVolumeLabel.Text = $"{(int)e.NewValue}%";
+        if (_updatingAudioControls) return;
+        if (ReferenceEquals(sender, SleepMusicVolumeSlider) && _app.IsMusicPreviewing)
+            _app.SetAudioPreviewVolume((int)e.NewValue);
+        if (ReferenceEquals(sender, EndSoundVolumeSlider) && _app.IsEndSoundPreviewing)
+            _app.SetAudioPreviewVolume((int)e.NewValue);
+    }
+
+    private void SleepMusicPreviewButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_app.IsMusicPreviewing)
+        {
+            _app.StopAudioPreview();
+            RefreshAudioPreviewState();
+            return;
+        }
+        var selectionId = GetAudioSelectionId(SleepMusicTrackCombo);
+        if (selectionId == AudioSelectionIds.CustomFile && string.IsNullOrWhiteSpace(_sleepMusicFilePath))
+        {
+            SetError("Browse for a music file before previewing your audio.");
+            SettingsTabs.SelectedIndex = 3;
+            return;
+        }
+        _app.PreviewMusic(selectionId, _sleepMusicFilePath, (int)SleepMusicVolumeSlider.Value);
+        RefreshAudioPreviewState();
+    }
+
+    private void EndSoundPreviewButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_app.IsEndSoundPreviewing)
+        {
+            _app.StopAudioPreview();
+            RefreshAudioPreviewState();
+            return;
+        }
+        var selectionId = GetAudioSelectionId(EndSoundTrackCombo);
+        if (selectionId == AudioSelectionIds.CustomFile && string.IsNullOrWhiteSpace(_endSoundFilePath))
+        {
+            SetError("Browse for an end-sound file before previewing your audio.");
+            SettingsTabs.SelectedIndex = 3;
+            return;
+        }
+        _app.PreviewEndSound(selectionId, _endSoundFilePath, (int)EndSoundVolumeSlider.Value);
+        RefreshAudioPreviewState();
+    }
+
     private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         if (!int.TryParse(TimerHoursBox.Text, out var timerHours) || timerHours is < 0 or > 24
@@ -486,6 +648,25 @@ public partial class MainWindow : Window
             return;
         }
 
+        var sleepMusicSelectionId = GetAudioSelectionId(SleepMusicTrackCombo);
+        if (SleepMusicEnabledCheck.IsChecked == true
+            && sleepMusicSelectionId == AudioSelectionIds.CustomFile && string.IsNullOrWhiteSpace(_sleepMusicFilePath))
+        {
+            SetError("Browse for a music file or choose one of the built-in tracks.");
+            SettingsTabs.SelectedIndex = 3;
+            BrowseSleepMusicButton.Focus();
+            return;
+        }
+        var endSoundSelectionId = GetAudioSelectionId(EndSoundTrackCombo);
+        if (EndSoundEnabledCheck.IsChecked == true
+            && endSoundSelectionId == AudioSelectionIds.CustomFile && string.IsNullOrWhiteSpace(_endSoundFilePath))
+        {
+            SetError("Browse for an end-sound file or choose one of the built-in cues.");
+            SettingsTabs.SelectedIndex = 3;
+            BrowseEndSoundButton.Focus();
+            return;
+        }
+
         var updated = _app.Settings.Clone();
         updated.InitialTimerMinutes = timerHours * 60 + timerMinutesPart;
         updated.ShowWarning = showWarning;
@@ -502,12 +683,21 @@ public partial class MainWindow : Window
         updated.ShowWidgetOnStartup = ShowWidgetOnStartupCheck.IsChecked == true;
         updated.WidgetAlwaysOnTop = WidgetTopmostCheck.IsChecked == true;
         updated.WidgetOpacity = WidgetOpacitySlider.Value / 100.0;
+        updated.SleepMusicEnabled = SleepMusicEnabledCheck.IsChecked == true;
+        updated.SleepMusicSelectionId = sleepMusicSelectionId;
+        updated.SleepMusicFilePath = _sleepMusicFilePath;
+        updated.SleepMusicVolume = (int)Math.Round(SleepMusicVolumeSlider.Value);
+        updated.EndSoundEnabled = EndSoundEnabledCheck.IsChecked == true;
+        updated.EndSoundSelectionId = endSoundSelectionId;
+        updated.EndSoundFilePath = _endSoundFilePath;
+        updated.EndSoundVolume = (int)Math.Round(EndSoundVolumeSlider.Value);
         _app.SaveSettings(updated);
     }
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
         if (_allowClose || _app.IsExiting) return;
+        _app.StopAudioPreview();
         e.Cancel = true;
         Hide();
     }

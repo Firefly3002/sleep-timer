@@ -17,6 +17,7 @@ public partial class App : System.Windows.Application
     private PromptWindow? _prompt;
     private DesktopWidgetWindow? _widget;
     private DispatcherTimer? _displayTimer;
+    private TimerAudioCoordinator? _audio;
     private readonly SettingsStore _settingsStore = new();
 
     internal AppSettings Settings { get; private set; } = new();
@@ -24,6 +25,8 @@ public partial class App : System.Windows.Application
     internal MainWindow MainView { get; private set; } = null!;
     internal bool IsExiting { get; private set; }
     internal bool IsWidgetVisible => _widget?.IsVisible == true;
+    internal bool IsMusicPreviewing => _audio?.IsPreviewingMusic == true;
+    internal bool IsEndSoundPreviewing => _audio?.IsPreviewingCue == true;
     private string PipeName => "SleepTimer-" + SanitizePipePart(Environment.UserName);
 
     protected override void OnStartup(StartupEventArgs e)
@@ -40,6 +43,13 @@ public partial class App : System.Windows.Application
 
         Settings = _settingsStore.Load();
         Engine = new TimerEngine(new SystemMonotonicClock(), new ThreadPoolOneShotScheduler());
+        _audio = new TimerAudioCoordinator(new AudioPlaybackBackend());
+        _audio.PlaybackFailed += message => Dispatcher.BeginInvoke(() =>
+        {
+            MainView?.SetNotice(message);
+            if (MainView?.IsVisible != true) _tray?.ShowNotice(message);
+        });
+        _audio.PreviewStateChanged += () => Dispatcher.BeginInvoke(() => MainView?.RefreshAudioPreviewState());
         Engine.SnapshotChanged += snapshot => Dispatcher.BeginInvoke(() => HandleSnapshot(snapshot));
         Engine.PowerActionRequested += action => Dispatcher.BeginInvoke(() => PerformPowerAction(action));
 
@@ -77,6 +87,7 @@ public partial class App : System.Windows.Application
                 Settings.CloseAppProcessName,
                 Settings.CustomProgramPath,
                 Settings.CustomProgramArguments));
+        _audio?.StartTimer(Settings, AudioAssetCatalog.ResolveMusic(Settings), AudioAssetCatalog.ResolveEndSound(Settings));
         MainView.SetNotice(durationMinutes is null
             ? "Timer started with your saved settings."
             : $"Your {FormatDuration(minutes)} timer has started.");
@@ -113,6 +124,7 @@ public partial class App : System.Windows.Application
     {
         if (Engine.GetSnapshot().Phase == TimerPhase.Idle) return;
         _widget?.PrepareForCancellation();
+        _audio?.CancelTimer();
         Engine.Cancel();
         ClosePrompt();
         MainView.SetNotice("Timer canceled. No power action is scheduled.");
@@ -126,8 +138,13 @@ public partial class App : System.Windows.Application
         {
             _settingsStore.Save(settings);
             Settings = settings.Clone();
+            _audio?.ApplySettings(
+                Settings,
+                AudioAssetCatalog.ResolveMusic(Settings),
+                AudioAssetCatalog.ResolveEndSound(Settings),
+                Engine.GetSnapshot());
             _widget?.ApplySettings(Settings);
-            MainView.SetNotice("Settings saved on this PC. Restart an active timer to apply timer changes.");
+            MainView.SetNotice("Settings saved on this PC. Audio changes apply now; timer changes apply when you start or restart a timer.");
             MainView.RefreshWidgetState();
         }
         catch (Exception exception)
@@ -202,6 +219,24 @@ public partial class App : System.Windows.Application
 
     internal void PreviewWidgetOpacity(double opacity) => _widget?.SetOpacity(opacity);
 
+    internal void PreviewMusic(string selectionId, string filePath, int volume)
+    {
+        var source = AudioAssetCatalog.ResolveMusic(selectionId, filePath);
+        if (source is null) return;
+        _audio?.PreviewMusic(source, volume);
+    }
+
+    internal void PreviewEndSound(string selectionId, string filePath, int volume)
+    {
+        var source = AudioAssetCatalog.ResolveEndSound(selectionId, filePath);
+        if (source is null) return;
+        _audio?.PreviewCue(source, volume);
+    }
+
+    internal void StopAudioPreview() => _audio?.StopPreview();
+
+    internal void SetAudioPreviewVolume(int volume) => _audio?.SetPreviewVolume(volume);
+
     internal void OpenSettings()
     {
         ShowMainWindow();
@@ -225,6 +260,7 @@ public partial class App : System.Windows.Application
                 "Your timer only runs while Sleep Timer is open.",
                 "Exiting now will cancel the active timer and its upcoming power action.",
                 "Exit and stop")) return;
+            _audio?.CancelTimer();
             Engine.Cancel();
         }
 
@@ -242,6 +278,7 @@ public partial class App : System.Windows.Application
     private void HandleSnapshot(TimerSnapshot snapshot)
     {
         if (MainView is null) return;
+        _audio?.ObserveSnapshot(snapshot);
         MainView.Refresh(snapshot);
         _tray?.Update(snapshot);
         _widget?.Refresh(snapshot);
@@ -276,6 +313,15 @@ public partial class App : System.Windows.Application
     {
         ClosePrompt();
         _widget?.CompleteProgress();
+        try
+        {
+            if (_audio is not null)
+                await _audio.PrepareForPowerActionAsync(Engine.GetSnapshot().WarningEnabled);
+        }
+        catch (Exception)
+        {
+            MainView.SetNotice("Audio could not be played. Continuing with the selected timer action.");
+        }
         try
         {
             if (action.Action == PowerAction.CloseApp)
@@ -390,6 +436,8 @@ public partial class App : System.Windows.Application
         _widget?.CloseFromApp();
         _widget = null;
         _tray?.Dispose();
+        _audio?.Dispose();
+        _audio = null;
         Engine?.Dispose();
         if (_ownsMutex && _instanceMutex is not null)
         {

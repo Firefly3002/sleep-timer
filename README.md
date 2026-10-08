@@ -9,11 +9,14 @@ A small, local Windows 10/11 utility for starting a sleep or shutdown timer from
 - The home screen has one-click 30-minute, 1-hour, 2-hour, and 4-hour timers. These are one-time choices and ask before replacing an active timer.
 - Open **Settings** to edit the saved duration and choose Sleep, Shut down, Restart, Lock, Close an app, or Run a custom program when time is up. Close an app offers a refreshed list of open apps with their window titles; enable manual entry to type a process name if the app isn’t listed. It sends a normal close request, waits up to 30 seconds for the app window to close, and never force-kills the app. A custom program uses a selected `.exe` and optional arguments, launched directly as your Windows account.
 - In **Warning** settings, turn off **Show a warning before the selected action** to run the action as soon as the timer ends. When enabled, warning and snooze intervals remain configurable.
+- In **Audio** settings, optionally play one of three built-in sleep tracks or choose a local MP3, WAV, WMA, or M4A file. Music loops through the timer, warning, and snooze stages. A separately enabled gentle cue plays when a warning opens (or at zero when warnings are off). Music and cue volume have independent controls and previews. Audio changes apply to an active timer when you save; a missing or unsupported local file is skipped with a notice and does not affect the timer action.
 - Choose **Widget** in the custom title bar to show a tiny moon-backed countdown pill. Click anywhere on it to open Sleep Timer. Shift-click-drag to move it, resize from the corner, adjust opacity, and pin it above other windows. Settings can also show the widget when the app opens.
 - During a timer, choose **Restart timer** to apply updated settings. Choose **Cancel timer** in the app, widget, warning, or tray menu to stop the pending power action.
 - The custom title bar's close button hides the app to the notification area. Use the tray menu's **Exit** command to close the app; it asks before stopping an active timer.
 
 Settings are stored at `%LOCALAPPDATA%\Sleep Timer\settings.json`. The timer runs only while the app is running.
+
+The built-in music and end cues are original procedurally synthesized audio. See `src\SleepTimer.App\Assets\Audio\AUDIO-CREDITS.md`; regenerate the assets with `python tools\generate_sleep_audio.py` (Python 3 and FFmpeg required).
 
 ## Build and validate
 

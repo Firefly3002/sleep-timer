@@ -273,7 +273,7 @@
                         <ControlTemplate TargetType="TabControl">
                             <Grid KeyboardNavigation.TabNavigation="Local">
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                <UniformGrid IsItemsHost="True" Rows="1" Columns="3" Margin="0,0,0,12" />
+                                <UniformGrid IsItemsHost="True" Rows="1" Columns="4" Margin="0,0,0,12" />
                                 <Border Grid.Row="1" Background="#111D34" BorderBrush="#2B3E5D" BorderThickness="1"
                                         CornerRadius="18" Padding="17">
                                     <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" />
@@ -450,9 +450,83 @@
                             </Grid>
                         </Grid>
                     </TabItem>
+                    <TabItem Header="Audio">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                            <TextBlock Text="Set a quiet soundtrack and a gentle cue for the end of each countdown."
+                                       FontSize="11" Foreground="{StaticResource SoftText}" />
+                            <Grid Grid.Row="1" Margin="0,13,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Border Background="#162740" BorderBrush="#2B3E5D" BorderThickness="1" CornerRadius="12" Padding="13,11">
+                                    <StackPanel>
+                                        <TextBlock Text="Sleep music" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource BrightText}" />
+                                        <CheckBox x:Name="SleepMusicEnabledCheck" Content="Play while a timer is active" Margin="0,8,0,10" />
+                                        <TextBlock Text="Choose a soundtrack" FontSize="10" Foreground="{StaticResource SoftText}" Margin="1,0,0,5" />
+                                        <ComboBox x:Name="SleepMusicTrackCombo" SelectionChanged="SleepMusicTrackCombo_SelectionChanged">
+                                            <ComboBoxItem Content="Moonlit ambient" Tag="moonlit-ambient" />
+                                            <ComboBoxItem Content="Soft piano" Tag="soft-piano" />
+                                            <ComboBoxItem Content="Rainy night" Tag="rainy-night" />
+                                            <ComboBoxItem Content="My audio file" Tag="custom" />
+                                        </ComboBox>
+                                        <Grid Margin="0,7,0,0">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="SleepMusicFileLabel" Text="Built-in track" FontSize="9" Foreground="{StaticResource SoftText}"
+                                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="Built-in track" />
+                                            <Button x:Name="BrowseSleepMusicButton" Grid.Column="1" Content="Browse" MinHeight="32" Padding="10,3" FontSize="11"
+                                                    Click="BrowseSleepMusicButton_Click" Margin="8,0,0,0" />
+                                        </Grid>
+                                        <Grid Margin="1,11,1,1">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <TextBlock Text="Music volume" FontSize="10" Foreground="{StaticResource SoftText}" />
+                                            <TextBlock x:Name="SleepMusicVolumeLabel" Grid.Column="1" Text="35%" FontSize="10"
+                                                       Foreground="{StaticResource MoonGold}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Slider x:Name="SleepMusicVolumeSlider" Minimum="0" Maximum="100" Value="35"
+                                                TickFrequency="5" IsSnapToTickEnabled="True"
+                                                ValueChanged="AudioVolumeSlider_ValueChanged" />
+                                        <Button x:Name="SleepMusicPreviewButton" Content="▶  Preview music" MinHeight="34" Padding="11,4"
+                                                FontSize="11" HorizontalAlignment="Right" Margin="0,4,0,0"
+                                                Click="SleepMusicPreviewButton_Click" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="2" Background="#162740" BorderBrush="#2B3E5D" BorderThickness="1" CornerRadius="12" Padding="13,11">
+                                    <StackPanel>
+                                        <TextBlock Text="Timer-end sound" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource BrightText}" />
+                                        <CheckBox x:Name="EndSoundEnabledCheck" Content="Play when the timer reaches zero" Margin="0,8,0,10" />
+                                        <TextBlock Text="Choose a gentle cue" FontSize="10" Foreground="{StaticResource SoftText}" Margin="1,0,0,5" />
+                                        <ComboBox x:Name="EndSoundTrackCombo" SelectionChanged="EndSoundTrackCombo_SelectionChanged">
+                                            <ComboBoxItem Content="Soft chime" Tag="soft-chime" />
+                                            <ComboBoxItem Content="Warm bell" Tag="warm-bell" />
+                                            <ComboBoxItem Content="Night bird" Tag="night-bird" />
+                                            <ComboBoxItem Content="My audio file" Tag="custom" />
+                                        </ComboBox>
+                                        <Grid Margin="0,7,0,0">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="EndSoundFileLabel" Text="Built-in cue" FontSize="9" Foreground="{StaticResource SoftText}"
+                                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="Built-in cue" />
+                                            <Button x:Name="BrowseEndSoundButton" Grid.Column="1" Content="Browse" MinHeight="32" Padding="10,3" FontSize="11"
+                                                    Click="BrowseEndSoundButton_Click" Margin="8,0,0,0" />
+                                        </Grid>
+                                        <Grid Margin="1,11,1,1">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <TextBlock Text="Cue volume" FontSize="10" Foreground="{StaticResource SoftText}" />
+                                            <TextBlock x:Name="EndSoundVolumeLabel" Grid.Column="1" Text="65%" FontSize="10"
+                                                       Foreground="{StaticResource MoonGold}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Slider x:Name="EndSoundVolumeSlider" Minimum="0" Maximum="100" Value="65"
+                                                TickFrequency="5" IsSnapToTickEnabled="True"
+                                                ValueChanged="AudioVolumeSlider_ValueChanged" />
+                                        <Button x:Name="EndSoundPreviewButton" Content="▶  Preview cue" MinHeight="34" Padding="11,4"
+                                                FontSize="11" HorizontalAlignment="Right" Margin="0,4,0,0"
+                                                Click="EndSoundPreviewButton_Click" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
                 </TabControl>
                 <Grid Grid.Row="2">
-                    <TextBlock Text="Changes are saved locally. Restart an active timer to apply timer settings."
+                    <TextBlock Text="Changes are saved locally. Audio settings apply to a running timer; timer settings apply next start."
                                FontSize="10" Foreground="{StaticResource SoftText}" VerticalAlignment="Center" />
                 </Grid>
             </Grid>

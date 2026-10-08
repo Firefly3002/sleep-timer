@@ -22,6 +22,19 @@ public enum PromptMode
     Floating
 }
 
+public static class AudioSelectionIds
+{
+    public const string CustomFile = "custom";
+
+    public const string MoonlitAmbient = "moonlit-ambient";
+    public const string SoftPiano = "soft-piano";
+    public const string RainyNight = "rainy-night";
+
+    public const string SoftChime = "soft-chime";
+    public const string WarmBell = "warm-bell";
+    public const string NightBird = "night-bird";
+}
+
 public sealed class AppSettings
 {
     public int InitialTimerMinutes { get; set; } = 120;
@@ -47,6 +60,14 @@ public sealed class AppSettings
     public double WidgetHeight { get; set; } = 60;
     public double? WidgetLeft { get; set; }
     public double? WidgetTop { get; set; }
+    public bool SleepMusicEnabled { get; set; }
+    public string SleepMusicSelectionId { get; set; } = AudioSelectionIds.MoonlitAmbient;
+    public string SleepMusicFilePath { get; set; } = string.Empty;
+    public int SleepMusicVolume { get; set; } = 35;
+    public bool EndSoundEnabled { get; set; }
+    public string EndSoundSelectionId { get; set; } = AudioSelectionIds.SoftChime;
+    public string EndSoundFilePath { get; set; } = string.Empty;
+    public int EndSoundVolume { get; set; } = 65;
 
     public AppSettings Clone() => (AppSettings)MemberwiseClone();
 
@@ -61,6 +82,16 @@ public sealed class AppSettings
         WidgetOpacity = double.IsFinite(WidgetOpacity) ? Math.Clamp(WidgetOpacity, 0.0, 1.0) : 0.96;
         WidgetWidth = double.IsFinite(WidgetWidth) ? Math.Clamp(WidgetWidth, 150, 180) : 164;
         WidgetHeight = double.IsFinite(WidgetHeight) ? Math.Clamp(WidgetHeight, 56, 68) : 60;
+        SleepMusicSelectionId = string.IsNullOrWhiteSpace(SleepMusicSelectionId)
+            ? AudioSelectionIds.MoonlitAmbient
+            : SleepMusicSelectionId.Trim();
+        SleepMusicFilePath = (SleepMusicFilePath ?? string.Empty).Trim();
+        SleepMusicVolume = Math.Clamp(SleepMusicVolume, 0, 100);
+        EndSoundSelectionId = string.IsNullOrWhiteSpace(EndSoundSelectionId)
+            ? AudioSelectionIds.SoftChime
+            : EndSoundSelectionId.Trim();
+        EndSoundFilePath = (EndSoundFilePath ?? string.Empty).Trim();
+        EndSoundVolume = Math.Clamp(EndSoundVolume, 0, 100);
         CloseAppProcessName = (CloseAppProcessName ?? string.Empty).Trim();
         CustomProgramPath = (CustomProgramPath ?? string.Empty).Trim();
         CustomProgramArguments ??= string.Empty;
