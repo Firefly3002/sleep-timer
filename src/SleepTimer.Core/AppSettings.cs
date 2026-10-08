@@ -41,6 +41,7 @@ public sealed class AppSettings
 {
     public int InitialTimerMinutes { get; set; } = 120;
     public bool StartTimerOnLaunch { get; set; } = true;
+    public bool StartAppOnWindowsStartup { get; set; }
     public PowerAction PowerAction { get; set; } = PowerAction.Sleep;
     public string CloseAppProcessName { get; set; } = string.Empty;
     public string CustomProgramPath { get; set; } = string.Empty;

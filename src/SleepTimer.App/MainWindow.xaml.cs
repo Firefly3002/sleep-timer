@@ -173,6 +173,7 @@ public partial class MainWindow : Window
         PromptScaleSlider.Value = Math.Round(settings.PromptScale * 100 / 10) * 10;
         ShowCountdownCheck.IsChecked = settings.ShowCountdown;
         StartOnLaunchCheck.IsChecked = settings.StartTimerOnLaunch;
+        StartAppOnWindowsStartupCheck.IsChecked = settings.StartAppOnWindowsStartup;
         ShowWidgetOnStartupCheck.IsChecked = settings.ShowWidgetOnStartup;
         WidgetTopmostCheck.IsChecked = settings.WidgetAlwaysOnTop;
         WidgetOpacitySlider.Value = Math.Round(settings.WidgetOpacity * 100 / 5) * 5;
@@ -371,6 +372,41 @@ public partial class MainWindow : Window
     }
 
     private void WarningEnabledCheck_Changed(object sender, RoutedEventArgs e) => UpdateWarningControls();
+
+    private void PreviewWarningButton_Click(object sender, RoutedEventArgs e)
+    {
+        var action = PowerActionCombo.SelectedIndex is >= 0 and <= (int)PowerAction.RunProgram
+            ? (PowerAction)PowerActionCombo.SelectedIndex
+            : _app.Settings.PowerAction;
+        var warningSeconds = int.TryParse(WarningSecondsBox.Text, out var parsedWarningSeconds)
+            ? Math.Clamp(parsedWarningSeconds, 5, 600)
+            : _app.Settings.WarningSeconds;
+        var snoozeMinutes = int.TryParse(SnoozeMinutesBox.Text, out var parsedSnoozeMinutes)
+            ? Math.Clamp(parsedSnoozeMinutes, 1, 180)
+            : _app.Settings.SnoozeMinutes;
+        var settings = _app.Settings.Clone();
+        settings.PromptMode = PromptModeCombo.SelectedIndex == 1 ? PromptMode.Floating : PromptMode.FullScreen;
+        settings.PromptScale = PromptScaleSlider.Value / 100.0;
+        settings.ShowCountdown = ShowCountdownCheck.IsChecked == true;
+
+        var actionRequest = new PowerActionRequest(
+            action,
+            GetCloseAppProcessName(),
+            CustomProgramPathBox.Text.Trim(),
+            CustomProgramArgumentsBox.Text);
+        var duration = TimeSpan.FromSeconds(warningSeconds);
+        var snapshot = new TimerSnapshot(TimerPhase.Warning, duration, action, duration)
+        {
+            ActionRequest = actionRequest,
+            SnoozeDuration = TimeSpan.FromMinutes(snoozeMinutes),
+            WarningEnabled = true
+        };
+        var preview = new PromptWindow(_app, settings, snapshot, isPreview: true)
+        {
+            Owner = this
+        };
+        preview.ShowDialog();
+    }
 
     private void UpdateWarningControls()
     {
@@ -680,6 +716,7 @@ public partial class MainWindow : Window
         updated.PromptScale = PromptScaleSlider.Value / 100.0;
         updated.ShowCountdown = ShowCountdownCheck.IsChecked == true;
         updated.StartTimerOnLaunch = StartOnLaunchCheck.IsChecked == true;
+        updated.StartAppOnWindowsStartup = StartAppOnWindowsStartupCheck.IsChecked == true;
         updated.ShowWidgetOnStartup = ShowWidgetOnStartupCheck.IsChecked == true;
         updated.WidgetAlwaysOnTop = WidgetTopmostCheck.IsChecked == true;
         updated.WidgetOpacity = WidgetOpacitySlider.Value / 100.0;

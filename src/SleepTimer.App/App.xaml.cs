@@ -136,7 +136,17 @@ public partial class App : System.Windows.Application
         settings.Normalize();
         try
         {
-            _settingsStore.Save(settings);
+            var previousStartupSetting = Settings.StartAppOnWindowsStartup;
+            WindowsStartupRegistration.SetEnabled(settings.StartAppOnWindowsStartup);
+            try
+            {
+                _settingsStore.Save(settings);
+            }
+            catch
+            {
+                WindowsStartupRegistration.SetEnabled(previousStartupSetting);
+                throw;
+            }
             Settings = settings.Clone();
             _audio?.ApplySettings(
                 Settings,
@@ -144,7 +154,7 @@ public partial class App : System.Windows.Application
                 AudioAssetCatalog.ResolveEndSound(Settings),
                 Engine.GetSnapshot());
             _widget?.ApplySettings(Settings);
-            MainView.SetNotice("Settings saved on this PC. Audio changes apply now; timer changes apply when you start or restart a timer.");
+            MainView.SetNotice("Settings saved on this PC. Windows sign-in launch and audio changes apply now; timer changes apply when you start or restart a timer.");
             MainView.RefreshWidgetState();
         }
         catch (Exception exception)

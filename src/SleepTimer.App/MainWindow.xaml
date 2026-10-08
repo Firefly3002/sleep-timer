@@ -361,11 +361,16 @@
                                                Margin="1,5,0,0" />
                                 </StackPanel>
                             </Grid>
-                            <CheckBox x:Name="StartOnLaunchCheck" Grid.Row="3" Content="Start my saved timer when I open the app"
-                                      Margin="0,15,0,0" />
-                            <TextBlock Grid.Row="4" Text="Quick timer buttons on the home screen are one-time choices; this saved duration stays unchanged."
+                            <StackPanel Grid.Row="3" Margin="0,15,0,0">
+                                <CheckBox x:Name="StartOnLaunchCheck" Content="Start my saved timer when I open the app"
+                                          ToolTip="Quick timer buttons on the home screen are one-time choices; the saved duration stays unchanged." />
+                                <CheckBox x:Name="StartAppOnWindowsStartupCheck"
+                                          Content="Open Sleep Timer when I sign in to Windows" Margin="0,10,0,0"
+                                          ToolTip="This opens the app at sign-in. The saved-timer option above separately controls whether a countdown starts." />
+                            </StackPanel>
+                            <TextBlock Grid.Row="4" Text="Windows sign-in opens the app. The saved-timer option separately decides whether a countdown starts."
                                        FontSize="10" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
-                                       VerticalAlignment="Bottom" Margin="1,12,12,1" />
+                                       VerticalAlignment="Bottom" Margin="1,10,12,1" />
                         </Grid>
                         </ScrollViewer>
                     </TabItem>
@@ -375,8 +380,14 @@
                                 <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <TextBlock Text="Choose if and how much time your check-in gives you." FontSize="11"
-                                       Foreground="{StaticResource SoftText}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="Choose if and how much time your check-in gives you." FontSize="11"
+                                           Foreground="{StaticResource SoftText}" VerticalAlignment="Center" />
+                                <Button x:Name="PreviewWarningButton" Grid.Column="1" Content="Preview warning"
+                                        MinHeight="32" Padding="11,4" FontSize="10" Margin="10,0,0,0"
+                                        Click="PreviewWarningButton_Click" />
+                            </Grid>
                             <CheckBox x:Name="EnableWarningCheck" Grid.Row="1" Content="Show a warning before the selected action"
                                       Margin="0,13,0,0" Checked="WarningEnabledCheck_Changed"
                                       Unchecked="WarningEnabledCheck_Changed" />

@@ -54,17 +54,17 @@
                 <Button x:Name="SnoozeButton" Content="Snooze 15 minutes" MinHeight="52" Margin="0,20,0,0"
                         FontSize="17" Background="#8CC7B1" BorderBrush="#8CC7B1" Foreground="#10231F"
                         Click="SnoozeButton_Click" />
-                <Button Content="Cancel timer" MinHeight="44" Margin="0,9,0,0" Background="#472F3B"
+                <Button x:Name="CancelButton" Content="Cancel timer" MinHeight="44" Margin="0,9,0,0" Background="#472F3B"
                         BorderBrush="#765061" Foreground="#FFD8DF"
                         Click="CancelButton_Click" />
-                <TextBlock Text="Cancel stops this timer. Snooze starts another interval." FontSize="11" Foreground="#91A3BB"
+                <TextBlock x:Name="FooterNotice" Text="Cancel stops this timer. Snooze starts another interval." FontSize="11" Foreground="#91A3BB"
                            HorizontalAlignment="Center" Margin="0,12,0,0" />
             </StackPanel>
         </Border>
         <Border x:Name="PromptTitleBar" Height="36" Margin="14,3,14,0" VerticalAlignment="Top"
                 CornerRadius="9" Background="#14243A" BorderBrush="#304765" BorderThickness="1" Visibility="Collapsed">
             <DockPanel Margin="9,0,0,0">
-                <Button DockPanel.Dock="Right" Content="×" Width="32" Height="28" MinHeight="28" Padding="0"
+                <Button x:Name="PromptTitleCloseButton" DockPanel.Dock="Right" Content="×" Width="32" Height="28" MinHeight="28" Padding="0"
                         FontSize="17" FontWeight="Normal" Background="#422B3A" BorderBrush="#765061"
                         Foreground="#FFE2E8" ToolTip="Cancel timer" Click="CancelButton_Click"
                         shell:WindowChrome.IsHitTestVisibleInChrome="True" />

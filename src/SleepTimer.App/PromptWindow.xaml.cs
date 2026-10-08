@@ -19,15 +19,25 @@ public partial class PromptWindow : Window
     private readonly DispatcherTimer _refreshTimer;
     private readonly TimeSpan _warningDuration;
     private readonly bool _fullScreenPrompt;
+    private readonly bool _isPreview;
     private bool _allowClose;
 
-    public PromptWindow(App app, AppSettings settings, TimerSnapshot warningSnapshot)
+    public PromptWindow(App app, AppSettings settings, TimerSnapshot warningSnapshot, bool isPreview = false)
     {
         InitializeComponent();
         _app = app;
         _settings = settings.Clone();
+        _isPreview = isPreview;
         _warningDuration = warningSnapshot.PhaseDuration;
         _fullScreenPrompt = settings.PromptMode == PromptMode.FullScreen;
+        if (_isPreview)
+        {
+            Title = "Sleep Timer · Warning Preview";
+            PromptTitleText.Text = "Sleep Timer · Warning Preview";
+            PromptTitleCloseButton.ToolTip = "Close preview";
+            FooterNotice.Text = "PREVIEW ONLY · no timer or action will run.";
+            FooterNotice.Foreground = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource("MoonGold");
+        }
         var snoozeMinutes = Math.Max(1, (int)Math.Round(warningSnapshot.SnoozeDuration.TotalMinutes));
         SnoozeButton.Content = $"Snooze {snoozeMinutes} minute{(snoozeMinutes == 1 ? "" : "s")}";
         ActionText.Text = ActionPresentation.WarningMessage(warningSnapshot.ActionRequest);
@@ -87,9 +97,19 @@ public partial class PromptWindow : Window
             : new ScaleTransform(settings.PromptScale, settings.PromptScale);
         PromptCard.LayoutTransform = scale;
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
-        _refreshTimer.Tick += (_, _) => Refresh(_app.Engine.GetSnapshot());
-        _refreshTimer.Start();
-        Refresh(_app.Engine.GetSnapshot());
+        _refreshTimer.Tick += (_, _) =>
+        {
+            if (!_isPreview) Refresh(_app.Engine.GetSnapshot());
+        };
+        if (_isPreview)
+        {
+            Refresh(warningSnapshot);
+        }
+        else
+        {
+            _refreshTimer.Start();
+            Refresh(_app.Engine.GetSnapshot());
+        }
     }
 
     private void ApplyPrimaryScreenBounds()
@@ -156,18 +176,34 @@ public partial class PromptWindow : Window
             : workArea.Top + (workArea.Height - Height) / 2;
     }
 
-    private void SnoozeButton_Click(object sender, RoutedEventArgs e) => _app.Engine.Snooze();
-    private void CancelButton_Click(object sender, RoutedEventArgs e) => _app.CancelTimer();
+    private void SnoozeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isPreview) Close();
+        else _app.Engine.Snooze();
+    }
+
+    private void CancelButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isPreview) Close();
+        else _app.CancelTimer();
+    }
 
     private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key != Key.Escape) return;
         e.Handled = true;
-        _app.CancelTimer();
+        if (_isPreview) Close();
+        else _app.CancelTimer();
     }
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
+        if (_isPreview)
+        {
+            _refreshTimer.Stop();
+            return;
+        }
+
         if (!_allowClose)
         {
             _refreshTimer.Stop();
