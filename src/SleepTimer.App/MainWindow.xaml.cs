@@ -37,7 +37,7 @@ public partial class MainWindow : Window
     public void Refresh(TimerSnapshot snapshot)
     {
         var active = snapshot.Phase != TimerPhase.Idle;
-        QuickTimersHint.Text = active ? "adds time to this timer" : "starts a fresh timer";
+        UpdateQuickTimerAppearance(active);
         var action = active ? snapshot.Action : _app.Settings.PowerAction;
         var actionTitle = ActionPresentation.Title(action);
         PrimaryTimerButton.Content = active ? "Restart timer" : "Start saved timer";
@@ -93,6 +93,15 @@ public partial class MainWindow : Window
     }
 
     public void RefreshWidgetState() => WidgetToggleButton.Content = _app.IsWidgetVisible ? "◉  Hide widget" : "◉  Widget";
+
+    private void UpdateQuickTimerAppearance(bool timerActive)
+    {
+        QuickTimersHint.Text = timerActive ? "adds time to this timer" : "starts a fresh timer";
+        QuickTimersHint.Foreground = (WpfBrush)FindResource(timerActive ? "Mint" : "BrightText");
+        QuickTimersHint.FontWeight = timerActive ? FontWeights.Bold : FontWeights.SemiBold;
+
+        QuickTimerButtonsPanel.Tag = timerActive;
+    }
 
     private void UpdateTimerRing(double progress, WpfBrush color)
     {

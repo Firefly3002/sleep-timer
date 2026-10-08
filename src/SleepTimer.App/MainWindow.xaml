@@ -38,10 +38,27 @@
                 <Setter.Value><ScaleTransform ScaleX="1" ScaleY="1" /></Setter.Value>
             </Setter>
             <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
+                <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType={x:Type UniformGrid}}}" Value="True">
+                    <Setter Property="Background" Value="#1C414B" />
+                    <Setter Property="BorderBrush" Value="#4C8E89" />
+                    <Setter Property="Foreground" Value="#E3FFF5" />
+                </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType={x:Type UniformGrid}}}" Value="False" />
+                        <Condition Property="IsMouseOver" Value="True" />
+                    </MultiDataTrigger.Conditions>
                     <Setter Property="Background" Value="#243B59" />
                     <Setter Property="BorderBrush" Value="#6A83A4" />
-                </Trigger>
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType={x:Type UniformGrid}}}" Value="True" />
+                        <Condition Property="IsMouseOver" Value="True" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="#275A60" />
+                    <Setter Property="BorderBrush" Value="#85C9B6" />
+                </MultiDataTrigger>
                 <Trigger Property="IsPressed" Value="True">
                     <Setter Property="RenderTransform">
                         <Setter.Value><ScaleTransform ScaleX="0.97" ScaleY="0.97" /></Setter.Value>
@@ -196,10 +213,11 @@
                     <Grid Margin="2,0,2,9">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <TextBlock Text="Quick timers" FontSize="12" FontWeight="SemiBold" />
-                        <TextBlock x:Name="QuickTimersHint" Grid.Column="1" Text="starts a fresh timer" FontSize="10"
-                                   Foreground="{StaticResource SoftText}" HorizontalAlignment="Right" Margin="14,1,2,0" />
+                        <TextBlock x:Name="QuickTimersHint" Grid.Column="1" Text="starts a fresh timer" FontSize="12"
+                                   FontWeight="SemiBold" Foreground="{StaticResource BrightText}"
+                                   HorizontalAlignment="Right" Margin="14,0,2,0" />
                     </Grid>
-                    <UniformGrid Columns="4" Rows="1">
+                    <UniformGrid x:Name="QuickTimerButtonsPanel" Columns="4" Rows="1">
                         <Button Tag="30" Style="{StaticResource PresetButtonStyle}" Content="30 minutes" Click="QuickPreset_Click" Margin="0,0,7,0" />
                         <Button Tag="60" Style="{StaticResource PresetButtonStyle}" Content="1 hour" Click="QuickPreset_Click" Margin="0,0,7,0" />
                         <Button Tag="120" Style="{StaticResource PresetButtonStyle}" Content="2 hours" Click="QuickPreset_Click" Margin="0,0,7,0" />
