@@ -320,13 +320,18 @@
                                                Foreground="{StaticResource SoftText}" Margin="1,0,0,6" />
                                     <Grid>
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <ComboBox x:Name="CloseAppProcessCombo" MinHeight="42" IsEditable="True"
-                                                  IsTextSearchEnabled="False" DisplayMemberPath="DisplayName"
-                                                  ToolTip="Select an open app or type its process name." />
+                                        <ComboBox x:Name="CloseAppProcessCombo" MinHeight="42"
+                                                  SelectionChanged="CloseAppProcessCombo_SelectionChanged"
+                                                  ToolTip="Select an open app window." />
                                         <Button Grid.Column="2" Content="Refresh" Padding="12,6" MinHeight="40"
                                                 Click="RefreshRunningAppsButton_Click" />
                                     </Grid>
-                                    <TextBlock Text="Pick an open app or type its process name. It receives a normal close request and is never force-closed."
+                                    <TextBlock x:Name="OpenAppsHint" FontSize="9" Foreground="{StaticResource SoftText}"
+                                               TextWrapping="Wrap" Margin="1,5,0,0" />
+                                    <TextBlock Text="Or enter a process name if it isn’t listed" FontSize="10"
+                                               Foreground="{StaticResource SoftText}" Margin="1,8,0,5" />
+                                    <TextBox x:Name="CloseAppProcessNameBox" TextChanged="CloseAppProcessNameBox_TextChanged" />
+                                    <TextBlock Text="The app receives a normal close request and is never force-closed."
                                                FontSize="9" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
                                                Margin="1,5,0,0" />
                                 </StackPanel>

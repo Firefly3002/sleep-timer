@@ -19,6 +19,7 @@ public partial class MainWindow : Window
 {
     private readonly App _app = (App)System.Windows.Application.Current;
     private bool _allowClose;
+    private bool _updatingCloseAppSelection;
 
     public MainWindow()
     {
@@ -234,22 +235,64 @@ public partial class MainWindow : Window
             .DistinctBy(choice => choice.ProcessName, StringComparer.OrdinalIgnoreCase)
             .OrderBy(choice => choice.Title, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
-        CloseAppProcessCombo.ItemsSource = sortedChoices;
+        _updatingCloseAppSelection = true;
+        try
+        {
+            CloseAppProcessCombo.Items.Clear();
+            var placeholder = new ComboBoxItem
+            {
+                Content = sortedChoices.Count == 0 ? "No open app windows found" : "Choose an open app…",
+                IsEnabled = false
+            };
+            CloseAppProcessCombo.Items.Add(placeholder);
 
-        var selected = sortedChoices.FirstOrDefault(choice =>
-            string.Equals(choice.ProcessName, processNameToKeep, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(choice.ProcessName + ".exe", processNameToKeep, StringComparison.OrdinalIgnoreCase));
-        CloseAppProcessCombo.SelectedItem = selected;
-        CloseAppProcessCombo.Text = selected?.DisplayName ?? processNameToKeep;
+            foreach (var choice in sortedChoices)
+            {
+                CloseAppProcessCombo.Items.Add(new ComboBoxItem
+                {
+                    Content = choice.DisplayName,
+                    Tag = choice.ProcessName
+                });
+            }
+
+            var selectedItem = CloseAppProcessCombo.Items
+                .OfType<ComboBoxItem>()
+                .FirstOrDefault(item => item.Tag is string processName
+                    && string.Equals(NormalizeProcessName(processName), NormalizeProcessName(processNameToKeep), StringComparison.OrdinalIgnoreCase));
+            CloseAppProcessCombo.SelectedItem = selectedItem ?? placeholder;
+            CloseAppProcessNameBox.Text = selectedItem?.Tag as string ?? processNameToKeep;
+            OpenAppsHint.Text = sortedChoices.Count == 0
+                ? "No selectable app windows were found. Refresh the list, or enter the app’s process name below."
+                : $"{sortedChoices.Count} open app{(sortedChoices.Count == 1 ? "" : "s")} found. Choose one, or enter a process name below.";
+        }
+        finally
+        {
+            _updatingCloseAppSelection = false;
+        }
     }
 
-    private string GetCloseAppProcessName()
+    private void CloseAppProcessCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (CloseAppProcessCombo.SelectedItem is RunningAppChoice selected
-            && string.Equals(CloseAppProcessCombo.Text, selected.DisplayName, StringComparison.OrdinalIgnoreCase))
-            return selected.ProcessName;
-        return CloseAppProcessCombo.Text.Trim();
+        if (_updatingCloseAppSelection || CloseAppProcessCombo.SelectedItem is not ComboBoxItem { Tag: string processName }) return;
+        _updatingCloseAppSelection = true;
+        try { CloseAppProcessNameBox.Text = processName; }
+        finally { _updatingCloseAppSelection = false; }
     }
+
+    private void CloseAppProcessNameBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_updatingCloseAppSelection || CloseAppProcessCombo.SelectedItem is not ComboBoxItem { Tag: string processName }) return;
+        if (string.Equals(NormalizeProcessName(CloseAppProcessNameBox.Text), NormalizeProcessName(processName), StringComparison.OrdinalIgnoreCase)) return;
+
+        _updatingCloseAppSelection = true;
+        try { CloseAppProcessCombo.SelectedIndex = 0; }
+        finally { _updatingCloseAppSelection = false; }
+    }
+
+    private string GetCloseAppProcessName() => CloseAppProcessNameBox.Text.Trim();
+
+    private static string NormalizeProcessName(string? value)
+        => Path.GetFileNameWithoutExtension(value?.Trim()) ?? string.Empty;
 
     private sealed record RunningAppChoice(string Title, string ProcessName)
     {
