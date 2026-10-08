@@ -272,13 +272,23 @@ public partial class App : System.Windows.Application
         _widget?.Refresh(snapshot);
     }
 
-    private void PerformPowerAction(PowerActionRequest action)
+    private async void PerformPowerAction(PowerActionRequest action)
     {
         ClosePrompt();
         _widget?.CompleteProgress();
         try
         {
-            MainView.SetNotice(PowerActions.Execute(action));
+            if (action.Action == PowerAction.CloseApp)
+            {
+                var processName = Path.GetFileNameWithoutExtension(action.CloseAppProcessName?.Trim());
+                var progress = $"Asking {processName} to close gracefully. Waiting up to 30 seconds…";
+                MainView.SetNotice(progress);
+                if (!MainView.IsVisible) _tray?.ShowNotice(progress);
+            }
+
+            var result = await PowerActions.ExecuteAsync(action);
+            MainView.SetNotice(result);
+            if (action.Action == PowerAction.CloseApp && !MainView.IsVisible) _tray?.ShowNotice(result);
         }
         catch (Exception exception)
         {

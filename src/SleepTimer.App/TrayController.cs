@@ -53,6 +53,12 @@ internal sealed class TrayController : IDisposable
 
     public void SetWidgetVisible(bool visible) => _widgetItem.Text = visible ? "Hide desktop widget" : "Show desktop widget";
 
+    public void ShowNotice(string message)
+    {
+        _icon.BalloonTipText = message;
+        _icon.ShowBalloonTip(5000);
+    }
+
     private static string FormatRemaining(TimeSpan value)
     {
         var totalHours = (int)value.TotalHours;

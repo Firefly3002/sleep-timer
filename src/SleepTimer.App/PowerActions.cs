@@ -8,10 +8,16 @@ namespace SleepTimer.Desktop;
 
 internal static class PowerActions
 {
+    private static readonly TimeSpan GracefulCloseTimeout = TimeSpan.FromSeconds(30);
     private const uint TokenAdjustPrivileges = 0x0020;
     private const uint TokenQuery = 0x0008;
     private const uint SePrivilegeEnabled = 0x00000002;
     private const int ErrorNotAllAssigned = 1300;
+
+    public static Task<string> ExecuteAsync(PowerActionRequest request)
+        => request.Action == PowerAction.CloseApp
+            ? Task.Run(() => CloseApplication(request.CloseAppProcessName))
+            : Task.FromResult(Execute(request));
 
     public static string Execute(PowerActionRequest request)
     {
@@ -77,25 +83,64 @@ internal static class PowerActions
         if (processes.Length == 0)
             throw new InvalidOperationException($"No running app named '{processName}' was found.");
 
-        var closeRequested = false;
+        var closeRequested = new List<Process>();
         try
         {
             foreach (var process in processes)
             {
-                if (process.MainWindowHandle == IntPtr.Zero || !process.CloseMainWindow()) continue;
-                closeRequested = true;
-                if (!process.WaitForExit(5000))
-                    throw new InvalidOperationException($"'{processName}' did not close within five seconds. It was not force-closed, so you can save your work and close it yourself.");
+                try
+                {
+                    if (process.MainWindowHandle != IntPtr.Zero && process.CloseMainWindow())
+                        closeRequested.Add(process);
+                }
+                catch (InvalidOperationException)
+                {
+                    // The app may exit while its windows are being inspected.
+                }
+                catch (Win32Exception)
+                {
+                    // Keep checking any other visible instance of the same app.
+                }
             }
+
+            if (closeRequested.Count == 0)
+            {
+                if (processes.All(HasExited)) return $"'{processName}' was already closed.";
+                throw new InvalidOperationException($"'{processName}' has no closable app window. It was not force-closed.");
+            }
+
+            var wait = Stopwatch.StartNew();
+            while (wait.Elapsed < GracefulCloseTimeout && closeRequested.Any(HasOpenWindow))
+                Thread.Sleep(200);
+
+            if (closeRequested.Any(HasOpenWindow))
+                throw new InvalidOperationException($"'{processName}' still has an open window after {GracefulCloseTimeout.TotalSeconds:0} seconds. Sleep Timer did not force-close it; save your work and close it yourself if needed.");
+
+            return $"'{processName}' closed its window gracefully.";
         }
         finally
         {
             foreach (var process in processes) process.Dispose();
         }
+    }
 
-        if (!closeRequested)
-            throw new InvalidOperationException($"'{processName}' has no closable app window. It was not force-closed.");
-        return $"Asked '{processName}' to close gracefully.";
+    private static bool HasExited(Process process)
+    {
+        try { return process.HasExited; }
+        catch (InvalidOperationException) { return true; }
+        catch (Win32Exception) { return false; }
+    }
+
+    private static bool HasOpenWindow(Process process)
+    {
+        try
+        {
+            if (process.HasExited) return false;
+            process.Refresh();
+            return process.MainWindowHandle != IntPtr.Zero;
+        }
+        catch (InvalidOperationException) { return false; }
+        catch (Win32Exception) { return true; }
     }
 
     private static string RunProgram(string? configuredPath, string? arguments)
