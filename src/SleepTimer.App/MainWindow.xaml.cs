@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private readonly App _app = (App)System.Windows.Application.Current;
     private bool _allowClose;
     private bool _updatingCloseAppSelection;
+    private bool _expandedForManualEntry;
 
     public MainWindow()
     {
@@ -290,6 +291,7 @@ public partial class MainWindow : Window
     {
         UpdateManualProcessNameVisibility();
         if (_updatingCloseAppSelection) return;
+        if (ManualProcessNameToggle.IsChecked == true) ExpandWindowForManualEntry();
         _updatingCloseAppSelection = true;
         try
         {
@@ -305,6 +307,21 @@ public partial class MainWindow : Window
         }
         finally { _updatingCloseAppSelection = false; }
         if (ManualProcessNameToggle.IsChecked == true) CloseAppProcessNameBox.Focus();
+    }
+
+    private void ExpandWindowForManualEntry()
+    {
+        if (_expandedForManualEntry || WindowState != WindowState.Normal) return;
+        var workArea = SystemParameters.WorkArea;
+        var oldHeight = Height;
+        var newHeight = Math.Min(workArea.Height, oldHeight + 56);
+        if (newHeight <= oldHeight + 1) return;
+
+        var centerY = Top + oldHeight / 2;
+        Height = newHeight;
+        var maxTop = Math.Max(workArea.Top, workArea.Bottom - newHeight);
+        Top = Math.Clamp(centerY - newHeight / 2, workArea.Top, maxTop);
+        _expandedForManualEntry = true;
     }
 
     private void UpdateManualProcessNameVisibility()

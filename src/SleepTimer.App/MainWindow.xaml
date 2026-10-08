@@ -282,6 +282,8 @@
                         </ControlTemplate>
                     </TabControl.Template>
                     <TabItem Header="Timer">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="False">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -365,6 +367,7 @@
                                        FontSize="10" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
                                        VerticalAlignment="Bottom" Margin="1,12,12,1" />
                         </Grid>
+                        </ScrollViewer>
                     </TabItem>
                     <TabItem Header="Warning">
                         <Grid>
