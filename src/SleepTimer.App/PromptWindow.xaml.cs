@@ -17,8 +17,6 @@ public partial class PromptWindow : Window
     private const double FloatingTitleBarHeight = 42;
     private const double MinimumFloatingContentWidth = 560;
     private const double MinimumFloatingContentHeight = 620;
-    private const double CompactFloatingThreshold = 0.7;
-
     private readonly App _app;
     private readonly AppSettings _settings;
     private readonly DispatcherTimer _refreshTimer;
@@ -36,7 +34,7 @@ public partial class PromptWindow : Window
         _isPreview = isPreview;
         _warningDuration = warningSnapshot.PhaseDuration;
         _fullScreenPrompt = settings.PromptMode == PromptMode.FullScreen;
-        _compactFloatingPrompt = !_fullScreenPrompt && settings.PromptScale < CompactFloatingThreshold;
+        _compactFloatingPrompt = !_fullScreenPrompt;
         if (_isPreview)
         {
             Title = "Sleep Timer · Warning Preview";
@@ -49,24 +47,22 @@ public partial class PromptWindow : Window
         SnoozeButton.Content = $"Snooze {snoozeMinutes} minute{(snoozeMinutes == 1 ? "" : "s")}";
         ActionText.Text = ActionPresentation.WarningMessage(warningSnapshot.ActionRequest);
         CountdownLabel.Text = ActionPresentation.CountdownLabel(warningSnapshot.Action);
-        if (_compactFloatingPrompt)
-        {
-            MoonBadge.Visibility = Visibility.Collapsed;
-            ActionText.Visibility = Visibility.Collapsed;
-            CountdownLabel.Visibility = Visibility.Collapsed;
-            WarningProgress.Visibility = Visibility.Collapsed;
-            if (!_isPreview) FooterNotice.Visibility = Visibility.Collapsed;
-            PromptCard.Padding = new Thickness(18, 14, 18, 14);
-            SnoozeButton.Margin = new Thickness(0, 8, 0, 0);
-            CancelButton.Margin = new Thickness(0, 7, 0, 0);
-            CountdownText.FontWeight = FontWeights.SemiBold;
-            CountdownText.FontSize = Math.Max(40, 24 / settings.PromptScale);
-            SnoozeButton.FontSize = Math.Max(17, 11 / settings.PromptScale);
-            SnoozeButton.MinHeight = Math.Max(52, 36 / settings.PromptScale);
-            CancelButton.FontSize = Math.Max(13, 10 / settings.PromptScale);
-            CancelButton.MinHeight = Math.Max(44, 34 / settings.PromptScale);
-            if (_isPreview) CancelButton.Content = "Close preview";
-        }
+        PromptHeadline.Visibility = Visibility.Collapsed;
+        MoonBadge.Visibility = Visibility.Collapsed;
+        ActionText.Visibility = Visibility.Collapsed;
+        CountdownLabel.Visibility = Visibility.Collapsed;
+        WarningProgress.Visibility = Visibility.Collapsed;
+        FooterNotice.Visibility = Visibility.Collapsed;
+        PromptCard.Padding = new Thickness(18, 14, 18, 14);
+        SnoozeButton.Margin = new Thickness(0, 8, 0, 0);
+        CancelButton.Margin = new Thickness(0, 7, 0, 0);
+        CountdownText.FontWeight = FontWeights.SemiBold;
+        CountdownText.FontSize = Math.Max(40, 24 / settings.PromptScale);
+        SnoozeButton.FontSize = Math.Max(17, 11 / settings.PromptScale);
+        SnoozeButton.MinHeight = Math.Max(52, 36 / settings.PromptScale);
+        CancelButton.FontSize = Math.Max(13, 10 / settings.PromptScale);
+        CancelButton.MinHeight = Math.Max(44, 34 / settings.PromptScale);
+        if (_isPreview) CancelButton.Content = "Close preview";
         if (!settings.ShowCountdown)
         {
             CountdownLabel.Visibility = Visibility.Collapsed;
