@@ -111,6 +111,42 @@ public sealed class TimerEngine : IDisposable
         SnapshotChanged?.Invoke(snapshot);
     }
 
+    /// <summary>Adds time to the active phase, or starts a new running interval from a warning.</summary>
+    public bool AddTime(TimeSpan duration)
+    {
+        if (duration <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
+
+        TimerSnapshot snapshot;
+        lock (_gate)
+        {
+            ThrowIfDisposed();
+            if (_phase == TimerPhase.Idle) return false;
+
+            if (_phase == TimerPhase.Warning)
+            {
+                // A quick timer chosen during the final check-in gives the user the selected
+                // amount of normal countdown time, followed by the configured warning again.
+                BeginPhaseUnsafe(TimerPhase.Running, duration);
+            }
+            else
+            {
+                // Keep the existing start time so the progress display remains continuous;
+                // only move the scheduled end later by the requested amount.
+                var remaining = SnapshotUnsafe().Remaining;
+                var phase = _phase;
+                _version++;
+                var version = _version;
+                _scheduled?.Dispose();
+                _phaseDuration += duration;
+                _scheduled = _scheduler.Schedule(remaining + duration, () => OnElapsed(version, phase));
+            }
+
+            snapshot = SnapshotUnsafe();
+        }
+        SnapshotChanged?.Invoke(snapshot);
+        return true;
+    }
+
     public void Cancel()
     {
         TimerSnapshot snapshot;

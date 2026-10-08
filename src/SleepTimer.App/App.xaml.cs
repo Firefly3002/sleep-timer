@@ -96,13 +96,11 @@ public partial class App : System.Windows.Application
 
     internal void StartPresetTimer(int durationMinutes)
     {
-        if (Engine.GetSnapshot().Phase != TimerPhase.Idle)
+        if (Engine.GetSnapshot().Phase != TimerPhase.Idle && Engine.AddTime(TimeSpan.FromMinutes(durationMinutes)))
         {
-            if (!ConfirmAction(
-                "A fresh start",
-                "Replace the active timer with a new timer?",
-                $"Your current timer will be replaced by a {FormatDuration(durationMinutes)} timer.",
-                "Replace timer")) return;
+            MainView.SetNotice($"Added {FormatDuration(durationMinutes)} to your timer.");
+            ShowMainWindow();
+            return;
         }
         StartTimer(durationMinutes);
     }

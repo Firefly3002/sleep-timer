@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     public void Refresh(TimerSnapshot snapshot)
     {
         var active = snapshot.Phase != TimerPhase.Idle;
+        QuickTimersHint.Text = active ? "adds time to this timer" : "starts a fresh timer";
         var action = active ? snapshot.Action : _app.Settings.PowerAction;
         var actionTitle = ActionPresentation.Title(action);
         PrimaryTimerButton.Content = active ? "Restart timer" : "Start saved timer";
