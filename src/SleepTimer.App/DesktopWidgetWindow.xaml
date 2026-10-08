@@ -29,9 +29,13 @@
                    Opacity="0.6" Panel.ZIndex="0" IsHitTestVisible="False" />
             <Border x:Name="WidgetProgressFill" Width="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"
                     CornerRadius="29" Background="#07172D" Opacity="1" Panel.ZIndex="1" IsHitTestVisible="False" />
-            <Grid x:Name="WidgetClickSurface" Background="Transparent" MouseLeftButtonDown="Widget_ClickOrDrag"
+            <Grid x:Name="WidgetClickSurface" Background="Transparent"
+                  MouseLeftButtonDown="Widget_ClickOrDrag"
+                  MouseLeftButtonUp="Widget_ClickOrDrag_MouseLeftButtonUp"
+                  MouseMove="Widget_ClickOrDrag_MouseMove"
+                  LostMouseCapture="Widget_ClickOrDrag_LostMouseCapture"
                   Panel.ZIndex="2"
-                  ToolTip="Click to open Sleep Timer · Shift-click-drag to move · resize from the corner">
+                  ToolTip="Click to open Sleep Timer · drag to move · resize from the corner">
                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                     <!-- Dark offset copies create a crisp outline around the time over the changing widget background. -->
                     <TextBlock Text="{Binding Text, ElementName=WidgetTimeText}" FontSize="25" FontWeight="Bold"

@@ -17,6 +17,8 @@ public partial class DesktopWidgetWindow : Window
     private TimeSpan _warningDuration;
     private bool _finishedAfterAction;
     private bool _cancellationPending;
+    private bool _pendingClickOrDrag;
+    private System.Windows.Point _mouseDownPosition;
 
     public DesktopWidgetWindow(App app, AppSettings settings)
     {
@@ -166,16 +168,43 @@ public partial class DesktopWidgetWindow : Window
     private void Widget_ClickOrDrag(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Left) return;
-        if ((Keyboard.Modifiers & ModifierKeys.Shift) != 0)
-        {
-            try { DragMove(); }
-            catch (InvalidOperationException) { }
-        }
-        else
-        {
-            _app.ShowMainWindow();
-        }
+
+        _mouseDownPosition = e.GetPosition(this);
+        _pendingClickOrDrag = true;
+        WidgetClickSurface.CaptureMouse();
         e.Handled = true;
+    }
+
+    private void Widget_ClickOrDrag_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (!_pendingClickOrDrag || e.LeftButton != MouseButtonState.Pressed) return;
+
+        var currentPosition = e.GetPosition(this);
+        if (Math.Abs(currentPosition.X - _mouseDownPosition.X) < SystemParameters.MinimumHorizontalDragDistance
+            && Math.Abs(currentPosition.Y - _mouseDownPosition.Y) < SystemParameters.MinimumVerticalDragDistance)
+            return;
+
+        _pendingClickOrDrag = false;
+        WidgetClickSurface.ReleaseMouseCapture();
+        try { DragMove(); }
+        catch (InvalidOperationException) { }
+        SaveBounds();
+        e.Handled = true;
+    }
+
+    private void Widget_ClickOrDrag_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left || !_pendingClickOrDrag) return;
+
+        _pendingClickOrDrag = false;
+        if (WidgetClickSurface.IsMouseCaptured) WidgetClickSurface.ReleaseMouseCapture();
+        _app.ShowMainWindow();
+        e.Handled = true;
+    }
+
+    private void Widget_ClickOrDrag_LostMouseCapture(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        _pendingClickOrDrag = false;
     }
 
     private void Window_Closing(object? sender, CancelEventArgs e)
