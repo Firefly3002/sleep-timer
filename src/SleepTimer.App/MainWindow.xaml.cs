@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -24,6 +25,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        CloseAppProcessCombo.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent,
+            new TextChangedEventHandler(CloseAppProcessCombo_TextChanged));
         LoadSettings(_app.Settings);
         Refresh(_app.Engine.GetSnapshot());
         RefreshWidgetState();
@@ -260,7 +263,8 @@ public partial class MainWindow : Window
                 .FirstOrDefault(item => item.Tag is string processName
                     && string.Equals(NormalizeProcessName(processName), NormalizeProcessName(processNameToKeep), StringComparison.OrdinalIgnoreCase));
             CloseAppProcessCombo.SelectedItem = selectedItem ?? placeholder;
-            CloseAppProcessNameBox.Text = selectedItem?.Tag as string ?? processNameToKeep;
+            CloseAppProcessCombo.Text = selectedItem?.Content?.ToString()
+                ?? (string.IsNullOrWhiteSpace(processNameToKeep) ? placeholder.Content?.ToString() : processNameToKeep);
             OpenAppsHint.Text = sortedChoices.Count == 0
                 ? "No selectable app windows were found. Refresh the list, or enter the app’s process name below."
                 : $"{sortedChoices.Count} open app{(sortedChoices.Count == 1 ? "" : "s")} found. Choose one, or enter a process name below.";
@@ -273,23 +277,37 @@ public partial class MainWindow : Window
 
     private void CloseAppProcessCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_updatingCloseAppSelection || CloseAppProcessCombo.SelectedItem is not ComboBoxItem { Tag: string processName }) return;
+        if (_updatingCloseAppSelection || CloseAppProcessCombo.SelectedItem is not ComboBoxItem selected || selected.Tag is not string) return;
         _updatingCloseAppSelection = true;
-        try { CloseAppProcessNameBox.Text = processName; }
+        try { CloseAppProcessCombo.Text = selected.Content?.ToString() ?? string.Empty; }
         finally { _updatingCloseAppSelection = false; }
     }
 
-    private void CloseAppProcessNameBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void CloseAppProcessCombo_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (_updatingCloseAppSelection || CloseAppProcessCombo.SelectedItem is not ComboBoxItem { Tag: string processName }) return;
-        if (string.Equals(NormalizeProcessName(CloseAppProcessNameBox.Text), NormalizeProcessName(processName), StringComparison.OrdinalIgnoreCase)) return;
+        var selected = (ComboBoxItem)CloseAppProcessCombo.SelectedItem;
+        if (string.Equals(CloseAppProcessCombo.Text, selected.Content?.ToString(), StringComparison.OrdinalIgnoreCase)) return;
 
+        var typedText = CloseAppProcessCombo.Text;
         _updatingCloseAppSelection = true;
-        try { CloseAppProcessCombo.SelectedIndex = 0; }
+        try
+        {
+            CloseAppProcessCombo.SelectedIndex = 0;
+            CloseAppProcessCombo.Text = typedText;
+        }
         finally { _updatingCloseAppSelection = false; }
     }
 
-    private string GetCloseAppProcessName() => CloseAppProcessNameBox.Text.Trim();
+    private string GetCloseAppProcessName()
+    {
+        if (CloseAppProcessCombo.SelectedItem is ComboBoxItem selected)
+        {
+            if (selected.Tag is string processName) return processName;
+            if (string.Equals(CloseAppProcessCombo.Text, selected.Content?.ToString(), StringComparison.OrdinalIgnoreCase)) return string.Empty;
+        }
+        return NormalizeProcessName(CloseAppProcessCombo.Text);
+    }
 
     private static string NormalizeProcessName(string? value)
         => Path.GetFileNameWithoutExtension(value?.Trim()) ?? string.Empty;
