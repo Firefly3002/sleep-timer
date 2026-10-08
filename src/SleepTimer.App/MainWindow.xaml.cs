@@ -220,6 +220,24 @@ public partial class MainWindow : Window
 
     private void CancelButton_Click(object sender, RoutedEventArgs e) => _app.CancelTimer();
 
+    private void OpenGitHubButton_Click(object sender, RoutedEventArgs e)
+        => OpenExternalUrl("https://github.com/Firefly3002/sleep-timer");
+
+    private void OpenSparkflyButton_Click(object sender, RoutedEventArgs e)
+        => OpenExternalUrl("https://sparkfly.online/projects");
+
+    private void OpenExternalUrl(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception)
+        {
+            SetNotice("Could not open the link. Check your default browser settings.");
+        }
+    }
+
     private void WidgetToggleButton_Click(object sender, RoutedEventArgs e) => _app.ToggleWidget();
 
     private void PowerActionCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -291,7 +291,7 @@
                         <ControlTemplate TargetType="TabControl">
                             <Grid KeyboardNavigation.TabNavigation="Local">
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                <UniformGrid IsItemsHost="True" Rows="1" Columns="4" Margin="0,0,0,12" />
+                                <UniformGrid IsItemsHost="True" Rows="1" Columns="5" Margin="0,0,0,12" />
                                 <Border Grid.Row="1" Background="#111D34" BorderBrush="#2B3E5D" BorderThickness="1"
                                         CornerRadius="18" Padding="17">
                                     <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" />
@@ -556,6 +556,36 @@
                                     </StackPanel>
                                 </Border>
                             </Grid>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="About">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="76" Height="76" CornerRadius="18" Background="#0C1830" Padding="9">
+                                    <Image Source="/Assets/sleep-timer.png" Stretch="Uniform" />
+                                </Border>
+                                <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="About me" FontSize="18" FontWeight="SemiBold"
+                                               Foreground="{StaticResource BrightText}" />
+                                    <TextBlock Text="Sleep Timer · by Firefly" FontSize="11"
+                                               Foreground="{StaticResource MoonGold}" Margin="0,4,0,0" />
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Grid.Row="1" Text="I built Sleep Timer as a small, customizable Windows countdown with optional sleep music and gentle timer-end actions. Find the source, follow updates, or report an issue on GitHub."
+                                       FontSize="12" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
+                                       Margin="1,18,12,0" MaxWidth="520" HorizontalAlignment="Left" />
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,20,0,0">
+                                <Button Content="View Sleep Timer on GitHub" MinHeight="36" Padding="13,6"
+                                        Background="{StaticResource AccentViolet}" BorderBrush="#C5BCFF"
+                                        Foreground="#17152D" Click="OpenGitHubButton_Click" />
+                                <Button Content="More projects on Sparkfly" MinHeight="36" Padding="13,6"
+                                        Margin="10,0,0,0" Click="OpenSparkflyButton_Click" />
+                            </StackPanel>
                         </Grid>
                     </TabItem>
                 </TabControl>
