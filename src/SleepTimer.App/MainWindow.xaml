@@ -326,16 +326,19 @@
                                                Foreground="{StaticResource SoftText}" Margin="1,0,0,6" />
                                     <Grid>
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <ComboBox x:Name="CloseAppProcessCombo" MinHeight="42" IsEditable="True"
-                                                  IsTextSearchEnabled="False"
+                                        <ComboBox x:Name="CloseAppProcessCombo" MinHeight="42"
                                                   SelectionChanged="CloseAppProcessCombo_SelectionChanged"
-                                                  ToolTip="Select an open app window, or type a process name." />
+                                                  ToolTip="Select an open app window." />
                                         <Button Grid.Column="2" Content="Refresh" Padding="12,6" MinHeight="40"
                                                 Click="RefreshRunningAppsButton_Click" />
                                     </Grid>
                                     <TextBlock x:Name="OpenAppsHint" FontSize="9" Foreground="{StaticResource SoftText}"
                                                TextWrapping="Wrap" Margin="1,5,0,0" />
-                                    <TextBlock Text="Choose an app or type its process name. It receives a normal close request and is never force-closed."
+                                    <CheckBox x:Name="ManualProcessNameToggle" Content="The app isn’t listed? Enter its process name"
+                                              FontSize="10" Margin="1,6,0,0"
+                                              Checked="ManualProcessNameToggle_Changed" Unchecked="ManualProcessNameToggle_Changed" />
+                                    <TextBox x:Name="CloseAppProcessNameBox" Visibility="Collapsed" Margin="0,5,0,0" />
+                                    <TextBlock Text="The app receives a normal close request and is never force-closed."
                                                FontSize="9" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
                                                Margin="1,6,0,0" />
                                 </StackPanel>

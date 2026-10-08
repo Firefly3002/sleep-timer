@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -25,8 +24,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        CloseAppProcessCombo.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent,
-            new TextChangedEventHandler(CloseAppProcessCombo_TextChanged));
         LoadSettings(_app.Settings);
         Refresh(_app.Engine.GetSnapshot());
         RefreshWidgetState();
@@ -263,8 +260,8 @@ public partial class MainWindow : Window
                 .FirstOrDefault(item => item.Tag is string processName
                     && string.Equals(NormalizeProcessName(processName), NormalizeProcessName(processNameToKeep), StringComparison.OrdinalIgnoreCase));
             CloseAppProcessCombo.SelectedItem = selectedItem ?? placeholder;
-            CloseAppProcessCombo.Text = selectedItem?.Content?.ToString()
-                ?? (string.IsNullOrWhiteSpace(processNameToKeep) ? placeholder.Content?.ToString() : processNameToKeep);
+            CloseAppProcessNameBox.Text = selectedItem?.Tag as string ?? processNameToKeep;
+            ManualProcessNameToggle.IsChecked = selectedItem is null && !string.IsNullOrWhiteSpace(processNameToKeep);
             OpenAppsHint.Text = sortedChoices.Count == 0
                 ? "No selectable app windows were found. Refresh the list, or enter the app’s process name below."
                 : $"{sortedChoices.Count} open app{(sortedChoices.Count == 1 ? "" : "s")} found. Choose one, or enter a process name below.";
@@ -273,41 +270,50 @@ public partial class MainWindow : Window
         {
             _updatingCloseAppSelection = false;
         }
+        UpdateManualProcessNameVisibility();
     }
 
     private void CloseAppProcessCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_updatingCloseAppSelection || CloseAppProcessCombo.SelectedItem is not ComboBoxItem selected || selected.Tag is not string) return;
         _updatingCloseAppSelection = true;
-        try { CloseAppProcessCombo.Text = selected.Content?.ToString() ?? string.Empty; }
+        try
+        {
+            CloseAppProcessNameBox.Text = (string)selected.Tag;
+            ManualProcessNameToggle.IsChecked = false;
+        }
         finally { _updatingCloseAppSelection = false; }
+        UpdateManualProcessNameVisibility();
     }
 
-    private void CloseAppProcessCombo_TextChanged(object sender, TextChangedEventArgs e)
+    private void ManualProcessNameToggle_Changed(object sender, RoutedEventArgs e)
     {
-        if (_updatingCloseAppSelection || CloseAppProcessCombo.SelectedItem is not ComboBoxItem { Tag: string processName }) return;
-        var selected = (ComboBoxItem)CloseAppProcessCombo.SelectedItem;
-        if (string.Equals(CloseAppProcessCombo.Text, selected.Content?.ToString(), StringComparison.OrdinalIgnoreCase)) return;
-
-        var typedText = CloseAppProcessCombo.Text;
+        UpdateManualProcessNameVisibility();
+        if (_updatingCloseAppSelection) return;
         _updatingCloseAppSelection = true;
         try
         {
-            CloseAppProcessCombo.SelectedIndex = 0;
-            CloseAppProcessCombo.Text = typedText;
+            if (ManualProcessNameToggle.IsChecked == true)
+            {
+                CloseAppProcessCombo.SelectedIndex = 0;
+                CloseAppProcessNameBox.Clear();
+            }
+            else if (CloseAppProcessCombo.SelectedItem is ComboBoxItem { Tag: string processName })
+                CloseAppProcessNameBox.Text = processName;
+            else
+                CloseAppProcessNameBox.Clear();
         }
         finally { _updatingCloseAppSelection = false; }
+        if (ManualProcessNameToggle.IsChecked == true) CloseAppProcessNameBox.Focus();
     }
 
-    private string GetCloseAppProcessName()
+    private void UpdateManualProcessNameVisibility()
     {
-        if (CloseAppProcessCombo.SelectedItem is ComboBoxItem selected)
-        {
-            if (selected.Tag is string processName) return processName;
-            if (string.Equals(CloseAppProcessCombo.Text, selected.Content?.ToString(), StringComparison.OrdinalIgnoreCase)) return string.Empty;
-        }
-        return NormalizeProcessName(CloseAppProcessCombo.Text);
+        if (CloseAppProcessNameBox is null || ManualProcessNameToggle is null) return;
+        CloseAppProcessNameBox.Visibility = ManualProcessNameToggle.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
     }
+
+    private string GetCloseAppProcessName() => CloseAppProcessNameBox.Text.Trim();
 
     private static string NormalizeProcessName(string? value)
         => Path.GetFileNameWithoutExtension(value?.Trim()) ?? string.Empty;
@@ -444,9 +450,14 @@ public partial class MainWindow : Window
         var customProgramPath = CustomProgramPathBox.Text.Trim();
         if (selectedAction == PowerAction.CloseApp && string.IsNullOrWhiteSpace(closeAppProcessName))
         {
-            SetError("Enter the app's process name, such as chrome or notepad.");
+            SetError("Choose an open app or enter its process name manually.");
             SettingsTabs.SelectedIndex = 0;
-            CloseAppProcessCombo.Focus();
+            if (CloseAppProcessCombo.SelectedItem is not ComboBoxItem { Tag: string })
+            {
+                ManualProcessNameToggle.IsChecked = true;
+                CloseAppProcessNameBox.Focus();
+            }
+            else CloseAppProcessCombo.Focus();
             return;
         }
         if (selectedAction == PowerAction.RunProgram
