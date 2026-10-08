@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>Assets\sleep-timer.ico</ApplicationIcon>
+    <AssemblyName>SleepTimer</AssemblyName>
+    <RootNamespace>SleepTimer.Desktop</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../SleepTimer.Core/SleepTimer.Core.csproj" />
+    <Content Include="Assets\sleep-timer.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Resource Include="Assets\sleep-timer.png" />
+    <Resource Include="Assets\widget-night-background.png" />
+    <Resource Include="Assets\night-banner.png" />
+  </ItemGroup>
+</Project>
+

@@ -1,0 +1,456 @@
+<Window x:Class="SleepTimer.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Sleep Timer" Width="860" Height="720" MinWidth="760" MinHeight="640"
+        WindowStyle="None" ResizeMode="CanResize" Background="Transparent" Foreground="{StaticResource BrightText}"
+        FontFamily="Segoe UI" WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
+        Closing="Window_Closing" StateChanged="Window_StateChanged">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="42" ResizeBorderThickness="7" CornerRadius="16"
+                            GlassFrameThickness="0" UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+    <Window.Resources>
+        <Style x:Key="HeaderActionButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Height" Value="24" />
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="MaxHeight" Value="24" />
+            <Setter Property="Padding" Value="9,0" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style x:Key="ChromeButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="#243650" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="FontSize" Value="15" />
+        </Style>
+        <Style x:Key="PresetButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="MinHeight" Value="56" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="Background" Value="#17263D" />
+            <Setter Property="BorderBrush" Value="#304765" />
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+            <Setter Property="RenderTransform">
+                <Setter.Value><ScaleTransform ScaleX="1" ScaleY="1" /></Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#243B59" />
+                    <Setter Property="BorderBrush" Value="#6A83A4" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="RenderTransform">
+                        <Setter.Value><ScaleTransform ScaleX="0.97" ScaleY="0.97" /></Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="WindowFrame" Storyboard.TargetProperty="Opacity"
+                                     From="0" To="1" Duration="0:0:0.48" />
+                    <DoubleAnimation Storyboard.TargetName="WindowAppearTransform" Storyboard.TargetProperty="Y"
+                                     From="10" To="0" Duration="0:0:0.55">
+                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+            <BeginStoryboard>
+                <Storyboard RepeatBehavior="Forever">
+                    <DoubleAnimation Storyboard.TargetName="HeaderStar" Storyboard.TargetProperty="Opacity"
+                                     From="0.28" To="0.95" Duration="0:0:2.8" AutoReverse="True" />
+                    <DoubleAnimation Storyboard.TargetName="TimerHalo" Storyboard.TargetProperty="Opacity"
+                                     From="0.10" To="0.25" Duration="0:0:3.4" AutoReverse="True" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+    <Border x:Name="WindowFrame" Margin="7" CornerRadius="16" Background="{StaticResource NightBackground}"
+            BorderBrush="#344763" BorderThickness="1" ClipToBounds="True" RenderTransformOrigin="0.5,0.5">
+        <Border.RenderTransform><TranslateTransform x:Name="WindowAppearTransform" Y="10" /></Border.RenderTransform>
+        <Grid Margin="14,0,14,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42" />
+                <RowDefinition Height="112" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="27" />
+            </Grid.RowDefinitions>
+
+            <Grid x:Name="TitleBar" Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="7,0,0,0">
+                    <Image Source="/SleepTimer;component/Assets/sleep-timer.png" Width="23" Height="23" />
+                    <TextBlock Text="Sleep Timer" FontSize="13" FontWeight="SemiBold" Margin="9,0,0,0"
+                               VerticalAlignment="Center" Foreground="#E7ECF5" />
+                    <Ellipse x:Name="HeaderStar" Width="5" Height="5" Fill="{StaticResource MoonGold}"
+                             Margin="8,2,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+                <Button x:Name="WidgetToggleButton" Grid.Column="2" Content="◉  Widget" Margin="0,5,7,5"
+                        Style="{StaticResource HeaderActionButtonStyle}" Background="#1C2C44" BorderBrush="#354A67"
+                        Click="WidgetToggleButton_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                <Button x:Name="SettingsToggleButton" Grid.Column="3" Content="⚙  Settings" Margin="0,5,9,5"
+                        Style="{StaticResource HeaderActionButtonStyle}" Background="#1C2C44" BorderBrush="#354A67"
+                        Click="SettingsToggleButton_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                <Button Grid.Column="4" Style="{StaticResource ChromeButtonStyle}" Content="—" ToolTip="Minimize"
+                        Margin="0,0,4,0" Click="MinimizeButton_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                <Button x:Name="MaximizeButton" Grid.Column="5" Style="{StaticResource ChromeButtonStyle}" Content="□"
+                        ToolTip="Maximize" Margin="0,0,4,0" Click="MaximizeButton_Click"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                <Button Grid.Column="6" Style="{StaticResource ChromeButtonStyle}" Content="×" ToolTip="Hide to tray"
+                        Background="#422B3A" Foreground="#FFE2E8" Click="HideButton_Click"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+            </Grid>
+
+            <Border Grid.Row="1" CornerRadius="16" Margin="0,0,0,9" ClipToBounds="True"
+                    BorderBrush="#304765" BorderThickness="1">
+                <Border.Background>
+                    <ImageBrush ImageSource="/SleepTimer;component/Assets/night-banner.png" Stretch="UniformToFill" Opacity="0.82" />
+                </Border.Background>
+                <Grid>
+                    <Rectangle RadiusX="15" RadiusY="15">
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                <GradientStop Color="#F20B1424" Offset="0" />
+                                <GradientStop Color="#E00B1424" Offset="0.44" />
+                                <GradientStop Color="#700B1424" Offset="0.72" />
+                                <GradientStop Color="#150B1424" Offset="1" />
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <StackPanel VerticalAlignment="Center" Margin="23,0,0,0">
+                        <TextBlock Text="A softer landing for your night." FontSize="23" FontWeight="SemiBold"
+                                   Foreground="#FFF8E8" />
+                        <TextBlock Text="Set a little time aside. We’ll take it from here." FontSize="12"
+                                   Foreground="#D2DCEF" Margin="1,5,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid x:Name="DashboardPanel" Grid.Row="2" Margin="0,5,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" MinHeight="245" Padding="18" CornerRadius="24"
+                        Background="#111D34" BorderBrush="#2B3E5D" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="246" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid x:Name="RingHost" Width="220" Height="220" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Ellipse x:Name="TimerHalo" Width="214" Height="214" Fill="#476E75B8" Opacity="0.16" />
+                            <Ellipse Width="194" Height="194" Stroke="#293956" StrokeThickness="11" />
+                            <Path x:Name="TimerArc" Width="194" Height="194" Stroke="{StaticResource AccentViolet}"
+                                  StrokeThickness="11" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <Path.Effect><DropShadowEffect Color="#A69AFF" BlurRadius="16" ShadowDepth="0" Opacity="0.42" /></Path.Effect>
+                            </Path>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="174">
+                                <TextBlock x:Name="TimeCaption" Text="TIME REMAINING" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource SoftText}" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="TimeLabel" Text="02:00:00" FontSize="30" FontWeight="Light"
+                                           Foreground="{StaticResource BrightText}" HorizontalAlignment="Center" Margin="0,5,0,0"
+                                           TextOptions.TextFormattingMode="Display" />
+                                <TextBlock x:Name="TimeDescriptor" Text="until your PC sleeps" FontSize="10"
+                                           Foreground="{StaticResource SoftText}" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,4,0">
+                            <Border Background="#1B3048" CornerRadius="13" Padding="10,7" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="{StaticResource Mint}"
+                                             VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock x:Name="StatusLabel" Text="TIMER ACTIVE" FontSize="10" FontWeight="Bold"
+                                               Foreground="{StaticResource Mint}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock x:Name="HeroTitleText" Text="Your night is in good hands." FontSize="23"
+                                       FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,13,0,0" />
+                            <TextBlock x:Name="DetailLabel" Text="We’ll give you a gentle warning before anything happens."
+                                       FontSize="12" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
+                                       Margin="0,6,0,0" />
+                            <TextBlock x:Name="ActionLabel" Text="SLEEP · 2 HOURS" FontSize="10" FontWeight="Bold"
+                                       Foreground="{StaticResource MoonGold}" Margin="0,13,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <StackPanel Grid.Row="1" Margin="2,13,2,13">
+                    <Grid Margin="2,0,2,9">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <TextBlock Text="Quick timers" FontSize="12" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Text="starts a fresh timer" FontSize="10"
+                                   Foreground="{StaticResource SoftText}" HorizontalAlignment="Right" Margin="14,1,2,0" />
+                    </Grid>
+                    <UniformGrid Columns="4" Rows="1">
+                        <Button Tag="30" Style="{StaticResource PresetButtonStyle}" Content="30 minutes" Click="QuickPreset_Click" Margin="0,0,7,0" />
+                        <Button Tag="60" Style="{StaticResource PresetButtonStyle}" Content="1 hour" Click="QuickPreset_Click" Margin="0,0,7,0" />
+                        <Button Tag="120" Style="{StaticResource PresetButtonStyle}" Content="2 hours" Click="QuickPreset_Click" Margin="0,0,7,0" />
+                        <Button Tag="240" Style="{StaticResource PresetButtonStyle}" Content="4 hours" Click="QuickPreset_Click" />
+                    </UniformGrid>
+                </StackPanel>
+
+                <Grid Grid.Row="2" Height="51">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.2*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="PrimaryTimerButton" Grid.Column="0" Content="Restart timer" Click="PrimaryTimerButton_Click"
+                            Background="#9BDFC4" BorderBrush="#B9F0D8" Foreground="#10211E" FontSize="14" />
+                    <Button x:Name="CancelButton" Grid.Column="2" Content="Cancel timer" Click="CancelButton_Click"
+                            Background="{StaticResource DangerBackground}" BorderBrush="#84556C"
+                            Foreground="{StaticResource DangerText}" />
+                </Grid>
+            </Grid>
+
+            <Grid x:Name="SettingsPanel" Grid.Row="2" Margin="0,5,0,0" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="47" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="48" />
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top">
+                    <TextBlock Text="Your timer, your rules" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Text="  ·  saved on this PC" FontSize="11" Foreground="{StaticResource SoftText}"
+                               VerticalAlignment="Center" Margin="5,2,0,0" />
+                </StackPanel>
+                <TabControl x:Name="SettingsTabs" Grid.Row="1" Margin="0,3,0,8" Background="Transparent" BorderThickness="0">
+                    <TabControl.Resources>
+                        <Style TargetType="TabItem">
+                            <Setter Property="Foreground" Value="{StaticResource SoftText}" />
+                            <Setter Property="Padding" Value="16,10" />
+                            <Setter Property="Margin" Value="0,0,8,0" />
+                            <Setter Property="MinHeight" Value="54" />
+                            <Setter Property="HorizontalContentAlignment" Value="Center" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TabItem">
+                                        <Border x:Name="TabBorder" Background="#111D34" BorderBrush="#2B3E5D"
+                                                BorderThickness="1" CornerRadius="12" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="TabBorder" Property="Background" Value="#273A59" />
+                                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#7D83C4" />
+                                                <Setter Property="Foreground" Value="{StaticResource BrightText}" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="TabBorder" Property="Opacity" Value="0.88" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TabControl.Resources>
+                    <TabControl.Template>
+                        <ControlTemplate TargetType="TabControl">
+                            <Grid KeyboardNavigation.TabNavigation="Local">
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                <UniformGrid IsItemsHost="True" Rows="1" Columns="3" Margin="0,0,0,12" />
+                                <Border Grid.Row="1" Background="#111D34" BorderBrush="#2B3E5D" BorderThickness="1"
+                                        CornerRadius="18" Padding="17">
+                                    <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" />
+                                </Border>
+                            </Grid>
+                        </ControlTemplate>
+                    </TabControl.Template>
+                    <TabItem Header="Timer">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Set the timer that starts from your saved settings." FontSize="11"
+                                       Foreground="{StaticResource SoftText}" />
+                            <Grid Grid.Row="1" Margin="0,15,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="1*" /><ColumnDefinition Width="18" /><ColumnDefinition Width="1*" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Timer length" FontSize="11" Foreground="{StaticResource SoftText}" Margin="1,0,0,6" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <TextBox x:Name="TimerHoursBox" Text="2" />
+                                        <TextBox x:Name="TimerMinutesPartBox" Grid.Column="2" Text="0" />
+                                    </Grid>
+                                    <Grid Margin="2,4,2,0">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <TextBlock Text="hours" FontSize="10" Foreground="{StaticResource SoftText}" />
+                                        <TextBlock Grid.Column="2" Text="minutes" FontSize="10" Foreground="{StaticResource SoftText}" />
+                                    </Grid>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="When time is up" FontSize="11" Foreground="{StaticResource SoftText}" Margin="1,0,0,6" />
+                                    <ComboBox x:Name="PowerActionCombo" SelectedIndex="0" MinHeight="42"
+                                              SelectionChanged="PowerActionCombo_SelectionChanged">
+                                        <ComboBoxItem Content="Sleep" />
+                                        <ComboBoxItem Content="Shut down" />
+                                        <ComboBoxItem Content="Restart" />
+                                        <ComboBoxItem Content="Lock" />
+                                        <ComboBoxItem Content="Close an app" />
+                                        <ComboBoxItem Content="Run a custom program" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+                            <Grid x:Name="PowerActionDetailsHost" Grid.Row="2" Margin="0,12,0,0">
+                                <StackPanel x:Name="CloseAppSettingsPanel" Visibility="Collapsed">
+                                    <TextBlock Text="Choose an open app" FontSize="11"
+                                               Foreground="{StaticResource SoftText}" Margin="1,0,0,6" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <ComboBox x:Name="CloseAppProcessCombo" MinHeight="42" IsEditable="True"
+                                                  IsTextSearchEnabled="False" DisplayMemberPath="DisplayName"
+                                                  ToolTip="Select an open app or type its process name." />
+                                        <Button Grid.Column="2" Content="Refresh" Padding="12,6" MinHeight="40"
+                                                Click="RefreshRunningAppsButton_Click" />
+                                    </Grid>
+                                    <TextBlock Text="Pick an open app or type its process name. It receives a normal close request and is never force-closed."
+                                               FontSize="9" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
+                                               Margin="1,5,0,0" />
+                                </StackPanel>
+                                <StackPanel x:Name="RunProgramSettingsPanel" Visibility="Collapsed">
+                                    <TextBlock Text="Program file" FontSize="11" Foreground="{StaticResource SoftText}"
+                                               Margin="1,0,0,6" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <TextBox x:Name="CustomProgramPathBox" />
+                                        <Button Grid.Column="2" Content="Browse" Padding="12,6" MinHeight="40"
+                                                Click="BrowseProgramButton_Click" />
+                                    </Grid>
+                                    <TextBlock Text="Arguments (optional)" FontSize="11" Foreground="{StaticResource SoftText}"
+                                               Margin="1,9,0,5" />
+                                    <TextBox x:Name="CustomProgramArgumentsBox" />
+                                    <TextBlock Text="The program starts directly with your arguments, using your Windows account."
+                                               FontSize="9" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
+                                               Margin="1,5,0,0" />
+                                </StackPanel>
+                            </Grid>
+                            <CheckBox x:Name="StartOnLaunchCheck" Grid.Row="3" Content="Start my saved timer when I open the app"
+                                      Margin="0,15,0,0" />
+                            <TextBlock Grid.Row="4" Text="Quick timer buttons on the home screen are one-time choices; this saved duration stays unchanged."
+                                       FontSize="10" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
+                                       VerticalAlignment="Bottom" Margin="1,12,12,1" />
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Warning">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Choose if and how much time your check-in gives you." FontSize="11"
+                                       Foreground="{StaticResource SoftText}" />
+                            <CheckBox x:Name="EnableWarningCheck" Grid.Row="1" Content="Show a warning before the selected action"
+                                      Margin="0,13,0,0" Checked="WarningEnabledCheck_Changed"
+                                      Unchecked="WarningEnabledCheck_Changed" />
+                            <Grid Grid.Row="2" Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="18" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Warning length · seconds" FontSize="11" Foreground="{StaticResource SoftText}" Margin="1,0,0,6" />
+                                    <TextBox x:Name="WarningSecondsBox" Text="60" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Snooze adds · minutes" FontSize="11" Foreground="{StaticResource SoftText}" Margin="1,0,0,6" />
+                                    <TextBox x:Name="SnoozeMinutesBox" Text="15" />
+                                </StackPanel>
+                            </Grid>
+                            <CheckBox x:Name="ShowCountdownCheck" Grid.Row="3" Content="Show the countdown on the warning"
+                                      Margin="0,14,0,0" />
+                            <Grid Grid.Row="4" Margin="0,16,0,0" VerticalAlignment="Top">
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="20" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Warning window" FontSize="11" Foreground="{StaticResource SoftText}" Margin="1,0,0,6" />
+                                    <ComboBox x:Name="PromptModeCombo" SelectedIndex="0">
+                                        <ComboBoxItem Content="Full screen" />
+                                        <ComboBoxItem Content="Movable window" />
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <DockPanel Margin="1,0,0,4">
+                                        <TextBlock Text="Window size" FontSize="11" Foreground="{StaticResource SoftText}" />
+                                        <TextBlock x:Name="ScaleLabel" Text="100%" Foreground="{StaticResource MoonGold}" DockPanel.Dock="Right" />
+                                    </DockPanel>
+                                    <Slider x:Name="PromptScaleSlider" Minimum="70" Maximum="140" Value="100"
+                                            TickFrequency="10" IsSnapToTickEnabled="True"
+                                            ValueChanged="PromptScaleSlider_ValueChanged" />
+                                </StackPanel>
+                                <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="Cancel at any time with the button, or press Esc on the warning."
+                                           FontSize="10" Foreground="{StaticResource SoftText}" Margin="1,12,0,0" />
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Widget">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Keep a small countdown near the corner of your screen." FontSize="11"
+                                       Foreground="{StaticResource SoftText}" />
+                            <CheckBox x:Name="ShowWidgetOnStartupCheck" Grid.Row="1" Content="Show the desktop widget when Sleep Timer opens"
+                                      Margin="0,15,0,0" />
+                            <CheckBox x:Name="WidgetTopmostCheck" Grid.Row="2" Content="Keep the widget above other windows"
+                                      Margin="0,13,0,0" />
+                            <Grid Grid.Row="3" Margin="0,20,0,0" VerticalAlignment="Top">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,18,0">
+                                    <Grid Margin="1,0,1,0">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Widget opacity" FontSize="11" Foreground="{StaticResource SoftText}" />
+                                        <TextBlock x:Name="WidgetOpacityLabel" Grid.Column="1" Text="96%"
+                                                   Foreground="{StaticResource MoonGold}" HorizontalAlignment="Right" Margin="12,0,0,0" />
+                                    </Grid>
+                                    <Slider x:Name="WidgetOpacitySlider" Minimum="0" Maximum="100" Value="96"
+                                            TickFrequency="5" IsSnapToTickEnabled="True"
+                                            ValueChanged="WidgetOpacitySlider_ValueChanged" />
+                                    <TextBlock Text="0% makes the widget fully transparent."
+                                               FontSize="9" Foreground="{StaticResource SoftText}" Margin="1,2,0,0" />
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#182941" CornerRadius="12" Padding="13,10">
+                            <TextBlock Text="Click anywhere on the tiny pill to open Sleep Timer. Shift-click-drag to move it; resize from the corner."
+                                               FontSize="10" Foreground="{StaticResource SoftText}" TextWrapping="Wrap" />
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+                <Grid Grid.Row="2">
+                    <TextBlock Text="Changes are saved locally. Restart an active timer to apply timer settings."
+                               FontSize="10" Foreground="{StaticResource SoftText}" VerticalAlignment="Center" />
+                    <Button Content="Save settings" HorizontalAlignment="Right" Width="164" MinHeight="40" Padding="12,6"
+                            Background="{StaticResource AccentViolet}" BorderBrush="#C5BCFF" Foreground="#17152D"
+                            Click="SaveSettingsButton_Click" />
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Row="3" Margin="3,4,3,0">
+                <TextBlock x:Name="NoticeText" Text="" FontSize="10" Foreground="{StaticResource SoftText}"
+                           TextWrapping="Wrap" VerticalAlignment="Center" Visibility="Collapsed" />
+                <TextBlock x:Name="ErrorText" Text="" FontSize="10" Foreground="#FFB3A9"
+                           TextWrapping="Wrap" VerticalAlignment="Center" Visibility="Collapsed" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

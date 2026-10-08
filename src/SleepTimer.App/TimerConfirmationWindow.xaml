@@ -1,0 +1,77 @@
+<Window x:Class="SleepTimer.Desktop.TimerConfirmationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Confirm timer change" Width="490" Height="280" MinWidth="450" MinHeight="260"
+        WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent"
+        Foreground="{StaticResource BrightText}" FontFamily="Segoe UI" WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False" UseLayoutRounding="True" KeyDown="Window_KeyDown">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="52" ResizeBorderThickness="0" CornerRadius="20"
+                            GlassFrameThickness="0" UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="DialogFrame" Storyboard.TargetProperty="Opacity"
+                                     From="0" To="1" Duration="0:0:0.18" />
+                    <DoubleAnimation Storyboard.TargetName="DialogOffset" Storyboard.TargetProperty="Y"
+                                     From="9" To="0" Duration="0:0:0.22">
+                        <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+    <Border x:Name="DialogFrame" Margin="7" CornerRadius="20" Background="{StaticResource NightBackground}"
+            BorderBrush="#566987" BorderThickness="1" ClipToBounds="True" Opacity="0">
+        <Border.RenderTransform><TranslateTransform x:Name="DialogOffset" Y="9" /></Border.RenderTransform>
+        <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="58" /><RowDefinition Height="*" /><RowDefinition Height="72" /></Grid.RowDefinitions>
+            <Border Grid.Row="0" CornerRadius="19,19,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Border.Background>
+                    <ImageBrush ImageSource="/SleepTimer;component/Assets/night-banner.png" Stretch="UniformToFill" Opacity="0.18" />
+                </Border.Background>
+                <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
+                    <Image Source="/SleepTimer;component/Assets/sleep-timer.png" Width="28" Height="28" />
+                    <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="DialogTitleText" Text="A fresh start" FontSize="13" FontWeight="SemiBold" />
+                        <TextBlock Text="SLEEP TIMER" FontSize="8" FontWeight="Bold" Foreground="{StaticResource MoonGold}"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+                <Button Content="×" Width="32" Height="30" MinHeight="30" Padding="0"
+                        FontWeight="Normal" Background="#293B56" BorderBrush="#425875" HorizontalAlignment="Right"
+                        VerticalAlignment="Center" Margin="0,0,14,0" Click="CancelButton_Click"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True" ToolTip="Keep current timer" />
+                </Grid>
+            </Border>
+            <Grid Grid.Row="1" Margin="24,16,24,10">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="56" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <Border Width="43" Height="43" CornerRadius="15" Background="#273A59" BorderBrush="#465B7C"
+                        BorderThickness="1" VerticalAlignment="Top">
+                    <TextBlock Text="☾" FontFamily="Segoe UI Symbol" FontSize="24" Foreground="{StaticResource MoonGold}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <TextBlock x:Name="HeadingText" Text="Replace the active timer?" FontSize="18" FontWeight="SemiBold"
+                               TextWrapping="Wrap" />
+                    <TextBlock x:Name="MessageText" Text="The active countdown will be replaced."
+                               FontSize="12" Foreground="{StaticResource SoftText}" TextWrapping="Wrap" Margin="0,7,2,0" />
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Row="2" Margin="22,0,22,18">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="148" /><ColumnDefinition Width="10" /><ColumnDefinition Width="124" /></Grid.ColumnDefinitions>
+                <Button Grid.Column="2" Content="Keep current" MinHeight="42" Padding="10,8" Background="#1B2C44"
+                        BorderBrush="#3C526F" Click="CancelButton_Click" IsCancel="True"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                <Button x:Name="ConfirmButton" Grid.Column="4" Content="Replace timer" MinHeight="42" Padding="10,8"
+                        Background="{StaticResource AccentViolet}" BorderBrush="#C5BCFF" Foreground="#17152D"
+                        Click="ConfirmButton_Click" IsDefault="True"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
