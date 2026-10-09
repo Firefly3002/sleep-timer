@@ -9,7 +9,14 @@ var checks = new (string Name, Action Run)[]
     ("cancel during the timer prevents a power action", CancelDuringTimer),
     ("cancel during warning prevents a power action", CancelDuringWarning),
     ("restart replaces the current timer", RestartReplacesTimer),
+    ("scheduled countdown can enter the warning phase immediately", StartInWarning),
+    ("scheduled warning bypass runs immediately when warnings are disabled", StartInWarningWithoutWarning),
     ("settings round-trip and preserve widget, launch, layout, power, and audio options", SettingsRoundTrip),
+    ("weekly schedules repeat once each selected local day", WeeklyScheduleRepeats),
+    ("weekly schedules match separate times and weekdays", WeeklyScheduleMatchesDaysAndTimes),
+    ("schedule edits saved during the matching minute apply immediately", WeeklyScheduleEditsApplyImmediately),
+    ("missed and active schedule occurrences are skipped", WeeklyScheduleSkipsUnavailableOccurrences),
+    ("schedule validation rejects overlapping times and missing action details", WeeklyScheduleValidationChecksRules),
     ("audio follows timer start, warning, snooze, and action transitions", AudioTimerLifecycle),
     ("end cue plays before an immediate no-warning power action", AudioCuePrecedesImmediateAction),
     ("audio playback failures are reported without stopping the timer", AudioFailureIsNonFatal),
@@ -115,6 +122,37 @@ static void RestartReplacesTimer()
     Equal(PowerAction.ShutDown, fixture.Engine.GetSnapshot().Action);
 }
 
+static void StartInWarning()
+{
+    using var fixture = new Fixture();
+    var request = new PowerActionRequest(PowerAction.ShutDown);
+    PowerActionRequest? requested = null;
+    fixture.Engine.PowerActionRequested += action => requested = action;
+
+    fixture.Engine.StartInWarning(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5), request);
+    Equal(TimerPhase.Warning, fixture.Engine.GetSnapshot().Phase);
+    Equal(TimeSpan.FromSeconds(10), fixture.Engine.GetSnapshot().Remaining);
+    Equal(true, fixture.Engine.GetSnapshot().WarningEnabled);
+    Equal(null, requested);
+
+    fixture.Advance(TimeSpan.FromSeconds(10));
+    Equal(TimerPhase.Idle, fixture.Engine.GetSnapshot().Phase);
+    Equal(request, requested);
+}
+
+static void StartInWarningWithoutWarning()
+{
+    using var fixture = new Fixture();
+    var request = new PowerActionRequest(PowerAction.Lock);
+    PowerActionRequest? requested = null;
+    fixture.Engine.PowerActionRequested += action => requested = action;
+
+    fixture.Engine.StartInWarning(TimeSpan.Zero, TimeSpan.FromMinutes(5), request);
+    Equal(TimerPhase.Idle, fixture.Engine.GetSnapshot().Phase);
+    Equal(false, fixture.Engine.GetSnapshot().WarningEnabled);
+    Equal(request, requested);
+}
+
 static void SettingsRoundTrip()
 {
     var directory = Path.Combine(Path.GetTempPath(), "SleepTimer-Test-" + Guid.NewGuid().ToString("N"));
@@ -136,9 +174,12 @@ static void SettingsRoundTrip()
         Equal(35, defaults.SleepMusicVolume);
         Equal(65, defaults.EndSoundVolume);
 
-        File.WriteAllText(store.FilePath, "{\"InitialTimerMinutes\":75}");
+        File.WriteAllText(store.FilePath, "{\"InitialTimerMinutes\":75,\"PromptScale\":1.0}");
         var oldSettings = store.Load();
         Equal(75, oldSettings.InitialTimerMinutes);
+        Equal(0.8, oldSettings.PromptScale);
+        Equal(0, oldSettings.WeeklySchedules.Count);
+        Equal(2, oldSettings.SettingsSchemaVersion);
         Equal(false, oldSettings.SleepMusicEnabled);
         Equal(false, oldSettings.EndSoundEnabled);
         Equal(AudioSelectionIds.MoonlitAmbient, oldSettings.SleepMusicSelectionId);
@@ -175,7 +216,18 @@ static void SettingsRoundTrip()
             EndSoundEnabled = true,
             EndSoundSelectionId = AudioSelectionIds.WarmBell,
             EndSoundFilePath = "C:\\Audio\\warm-bell.wav",
-            EndSoundVolume = 72
+            EndSoundVolume = 72,
+            WeeklySchedules =
+            [
+                new WeeklyScheduleEntry
+                {
+                    IsEnabled = true,
+                    DaysOfWeek = [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday],
+                    StartTime = new TimeOnly(22, 15),
+                    SkipCountdown = true,
+                    ActionRequest = new PowerActionRequest(PowerAction.RunProgram, CustomProgramPath: "C:\\Tools\\night.exe", CustomProgramArguments: "--quiet")
+                }
+            ]
         };
         store.Save(settings);
         var loaded = store.Load();
@@ -210,6 +262,15 @@ static void SettingsRoundTrip()
         Equal(settings.EndSoundSelectionId, loaded.EndSoundSelectionId);
         Equal(settings.EndSoundFilePath, loaded.EndSoundFilePath);
         Equal(settings.EndSoundVolume, loaded.EndSoundVolume);
+        Equal(2, loaded.SettingsSchemaVersion);
+        Equal(1, loaded.WeeklySchedules.Count);
+        Equal(settings.WeeklySchedules[0].Id, loaded.WeeklySchedules[0].Id);
+        Equal(settings.WeeklySchedules[0].IsEnabled, loaded.WeeklySchedules[0].IsEnabled);
+        if (!settings.WeeklySchedules[0].DaysOfWeek.SequenceEqual(loaded.WeeklySchedules[0].DaysOfWeek))
+            throw new InvalidOperationException("The saved schedule days did not round-trip.");
+        Equal(settings.WeeklySchedules[0].StartTime, loaded.WeeklySchedules[0].StartTime);
+        Equal(settings.WeeklySchedules[0].SkipCountdown, loaded.WeeklySchedules[0].SkipCountdown);
+        Equal(settings.WeeklySchedules[0].ActionRequest, loaded.WeeklySchedules[0].ActionRequest);
 
         settings.SleepMusicVolume = -1;
         settings.EndSoundVolume = 150;
@@ -221,6 +282,122 @@ static void SettingsRoundTrip()
     {
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
     }
+}
+
+static void WeeklyScheduleRepeats()
+{
+    var service = new WeeklyScheduleService();
+    var schedule = new WeeklyScheduleEntry
+    {
+        IsEnabled = true,
+        DaysOfWeek = [.. WeeklyScheduleService.Weekdays],
+        StartTime = new TimeOnly(22, 0)
+    };
+    service.UpdateSchedules([schedule]);
+
+    Equal(null, service.Evaluate(new DateTime(2026, 10, 12, 21, 59, 59), timerActive: false));
+    Equal(schedule.Id, service.Evaluate(new DateTime(2026, 10, 12, 22, 0, 0), timerActive: false)?.Id);
+    Equal(null, service.Evaluate(new DateTime(2026, 10, 12, 22, 0, 40), timerActive: false));
+    Equal(schedule.Id, service.Evaluate(new DateTime(2026, 10, 13, 22, 0, 0), timerActive: false)?.Id);
+}
+
+static void WeeklyScheduleMatchesDaysAndTimes()
+{
+    var monday = new WeeklyScheduleEntry
+    {
+        IsEnabled = true,
+        DaysOfWeek = [DayOfWeek.Monday],
+        StartTime = new TimeOnly(20, 0),
+        ActionRequest = new PowerActionRequest(PowerAction.Sleep)
+    };
+    var tuesday = new WeeklyScheduleEntry
+    {
+        IsEnabled = true,
+        DaysOfWeek = [DayOfWeek.Tuesday],
+        StartTime = new TimeOnly(20, 15),
+        ActionRequest = new PowerActionRequest(PowerAction.ShutDown)
+    };
+    var laterMonday = new WeeklyScheduleEntry
+    {
+        IsEnabled = true,
+        DaysOfWeek = [DayOfWeek.Monday],
+        StartTime = new TimeOnly(21, 0),
+        ActionRequest = new PowerActionRequest(PowerAction.Lock)
+    };
+    var service = new WeeklyScheduleService();
+    service.UpdateSchedules([monday, tuesday, laterMonday]);
+
+    Equal(monday.Id, service.Evaluate(new DateTime(2026, 10, 12, 20, 0, 0), timerActive: false)?.Id);
+    Equal(laterMonday.Id, service.Evaluate(new DateTime(2026, 10, 12, 21, 0, 0), timerActive: false)?.Id);
+    Equal(tuesday.Id, service.Evaluate(new DateTime(2026, 10, 13, 20, 15, 0), timerActive: false)?.Id);
+    Equal(null, service.Evaluate(new DateTime(2026, 10, 13, 20, 0, 0), timerActive: false));
+}
+
+static void WeeklyScheduleEditsApplyImmediately()
+{
+    var service = new WeeklyScheduleService();
+    var now = new DateTime(2026, 10, 13, 20, 0, 0);
+    Equal(null, service.Evaluate(now, timerActive: false));
+
+    var schedule = new WeeklyScheduleEntry
+    {
+        IsEnabled = true,
+        DaysOfWeek = [DayOfWeek.Tuesday],
+        StartTime = new TimeOnly(20, 0)
+    };
+    service.UpdateSchedules([schedule]);
+    Equal(schedule.Id, service.Evaluate(now.AddSeconds(30), timerActive: false)?.Id);
+}
+
+static void WeeklyScheduleSkipsUnavailableOccurrences()
+{
+    var schedule = new WeeklyScheduleEntry
+    {
+        IsEnabled = true,
+        DaysOfWeek = [DayOfWeek.Monday],
+        StartTime = new TimeOnly(22, 0)
+    };
+
+    var activeService = new WeeklyScheduleService();
+    activeService.UpdateSchedules([schedule]);
+    Equal(null, activeService.Evaluate(new DateTime(2026, 10, 12, 22, 0, 0), timerActive: true));
+    Equal(null, activeService.Evaluate(new DateTime(2026, 10, 12, 22, 0, 30), timerActive: false));
+    Equal(schedule.Id, activeService.Evaluate(new DateTime(2026, 10, 19, 22, 0, 0), timerActive: false)?.Id);
+
+    var missedService = new WeeklyScheduleService();
+    missedService.UpdateSchedules([schedule]);
+    Equal(null, missedService.Evaluate(new DateTime(2026, 10, 12, 22, 1, 0), timerActive: false));
+    Equal(schedule.Id, missedService.Evaluate(new DateTime(2026, 10, 19, 22, 0, 0), timerActive: false)?.Id);
+}
+
+static void WeeklyScheduleValidationChecksRules()
+{
+    var first = new WeeklyScheduleEntry
+    {
+        IsEnabled = true,
+        DaysOfWeek = [DayOfWeek.Monday, DayOfWeek.Tuesday],
+        StartTime = new TimeOnly(22, 0)
+    };
+    var duplicate = new WeeklyScheduleEntry
+    {
+        IsEnabled = true,
+        DaysOfWeek = [DayOfWeek.Tuesday],
+        StartTime = new TimeOnly(22, 0)
+    };
+    if (WeeklyScheduleValidation.Validate([first, duplicate]) is null)
+        throw new InvalidOperationException("An overlapping day and time was accepted.");
+
+    var missingApp = new WeeklyScheduleEntry
+    {
+        IsEnabled = true,
+        DaysOfWeek = [DayOfWeek.Monday],
+        ActionRequest = new PowerActionRequest(PowerAction.CloseApp)
+    };
+    if (WeeklyScheduleValidation.Validate([missingApp]) is null)
+        throw new InvalidOperationException("A Close an app schedule without a process name was accepted.");
+
+    duplicate.IsEnabled = false;
+    Equal(null, WeeklyScheduleValidation.Validate([first, duplicate]));
 }
 
 static void AudioTimerLifecycle()

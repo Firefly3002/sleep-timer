@@ -18,6 +18,7 @@ Sleep Timer is a Windows desktop app for choosing what happens when a countdown 
 - Choose Sleep, Shut down, Restart, Lock, close an app gracefully, or launch a custom program when time is up.
 - Show a configurable warning with snooze controls, or turn warnings off and run the selected action when the timer reaches zero.
 - Play optional looping sleep music and a gentle cue when a warning opens or the timer ends. Choose built-in ambient, piano, rain, forest, ocean, and cue sounds, or use local audio files.
+- Set recurring weekly countdowns in the Schedule tab. Choose local start times, repeat days, any supported power action, and whether to skip straight to the warning. Schedules use the saved timer length and warning/snooze settings; missed times and times that conflict with an active timer are skipped.
 - Keep an optional draggable, resizable countdown widget on the desktop. Its moonlit background reflects timer progress.
 - Open the app at Windows sign-in and choose whether the saved countdown also starts then.
 
@@ -50,12 +51,15 @@ The night-sky artwork and app icon are included in the application. The built-in
 - Double-click **Sleep Timer** on the desktop. It starts the saved timer immediately and shows the remaining time.
 - The first run uses a two-hour timer, Sleep, a 60-second warning, a 15-minute snooze, and a full-screen warning.
 - Open **Settings** to edit the saved duration, warning behavior, widget, audio, or About information.
+- Open **Settings → Schedule** to add timers to individual days or repeat an entry on selected weekdays. Schedules run while Sleep Timer is open or minimized to the tray; they do not run after you exit the app.
 - For **Close an app**, choose from the refreshed list of open windows or enter a process name. Sleep Timer sends a normal close request, waits up to 30 seconds, and never force-kills the app.
 - A custom program uses a selected `.exe` and optional arguments, launched directly as your Windows account.
 - During an active countdown, choose **Restart timer** to apply the saved duration and action. Choose **Cancel timer** in the app, widget, warning, or tray menu to stop it.
 - The custom title bar's close button hides the app to the notification area. Choose **Exit** from the tray menu to close the app; it asks before stopping an active countdown.
 
 Settings are stored at `%LOCALAPPDATA%\Sleep Timer\settings.json`. The countdown runs only while the app is running.
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Build
 

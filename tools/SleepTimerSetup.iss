@@ -1,5 +1,5 @@
 #define AppName "Sleep Timer"
-#define AppVersion "1.3.1"
+#define AppVersion "1.4.0"
 #define AppPublisher "Sleep Timer"
 #define AppExecutable "SleepTimer.exe"
 

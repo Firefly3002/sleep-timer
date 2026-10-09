@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,6 +11,7 @@ using SleepTimer.Core;
 using WpfButton = System.Windows.Controls.Button;
 using WpfComboBox = System.Windows.Controls.ComboBox;
 using WpfBrush = System.Windows.Media.Brush;
+using WpfColor = System.Windows.Media.Color;
 using WpfOpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using WpfPoint = System.Windows.Point;
 using WpfSize = System.Windows.Size;
@@ -25,6 +27,7 @@ public partial class MainWindow : Window
     private bool _updatingAudioControls;
     private string _sleepMusicFilePath = string.Empty;
     private string _endSoundFilePath = string.Empty;
+    private List<WeeklyScheduleEntry> _scheduleDraft = [];
 
     public MainWindow()
     {
@@ -194,6 +197,7 @@ public partial class MainWindow : Window
             EndSoundEnabledCheck.IsChecked = settings.EndSoundEnabled;
             _sleepMusicFilePath = settings.SleepMusicFilePath;
             _endSoundFilePath = settings.EndSoundFilePath;
+            _scheduleDraft = settings.WeeklySchedules.Select(schedule => schedule.Clone()).ToList();
             SelectAudioItem(SleepMusicTrackCombo, settings.SleepMusicSelectionId);
             SelectAudioItem(EndSoundTrackCombo, settings.EndSoundSelectionId);
             SleepMusicVolumeSlider.Value = settings.SleepMusicVolume;
@@ -204,6 +208,7 @@ public partial class MainWindow : Window
         UpdatePowerActionOptions();
         UpdateWarningControls();
         RefreshAudioPreviewState();
+        RefreshScheduleCalendar();
     }
 
     private void PrimaryTimerButton_Click(object sender, RoutedEventArgs e)
@@ -445,6 +450,193 @@ public partial class MainWindow : Window
         ShowCountdownCheck.IsEnabled = enabled;
         PromptModeCombo.IsEnabled = enabled;
         PromptScaleSlider.IsEnabled = enabled;
+    }
+
+    private void AddScheduleButton_Click(object sender, RoutedEventArgs e) => EditSchedule(null);
+
+    private void ScheduleCard_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfButton { Tag: Guid id })
+            EditSchedule(_scheduleDraft.FirstOrDefault(schedule => schedule.Id == id));
+    }
+
+    private void EditSchedule(WeeklyScheduleEntry? schedule, DayOfWeek? defaultDay = null)
+    {
+        var editor = new ScheduleEditorWindow(_app.Settings, schedule, defaultDay) { Owner = this };
+        if (editor.ShowDialog() != true) return;
+
+        if (editor.DeleteRequested)
+        {
+            if (schedule is not null) _scheduleDraft.RemoveAll(item => item.Id == schedule.Id);
+        }
+        else if (editor.EditedEntry is { } edited)
+        {
+            var existingIndex = _scheduleDraft.FindIndex(item => item.Id == edited.Id);
+            if (existingIndex >= 0) _scheduleDraft[existingIndex] = edited;
+            else _scheduleDraft.Add(edited);
+        }
+
+        RefreshScheduleCalendar();
+    }
+
+    private void RefreshScheduleCalendar()
+    {
+        if (ScheduleWeekGrid is null) return;
+        ScheduleWeekGrid.Children.Clear();
+        var today = DateTime.Today.DayOfWeek;
+        var weekStart = DateTime.Today.AddDays(-(((int)today + 6) % 7));
+        var weekOrder = WeeklyScheduleService.Weekdays;
+        foreach (var (day, dayIndex) in weekOrder.Select((day, index) => (day, index)))
+        {
+            var dayEntries = _scheduleDraft
+                .Where(schedule => schedule.DaysOfWeek.Contains(day))
+                .OrderBy(schedule => schedule.StartTime)
+                .ToList();
+            var dayLabel = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day).TrimEnd('.');
+            var isToday = day == today;
+            var panel = new Grid();
+            panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(48) });
+            panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            panel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(38) });
+
+            var heading = new Border
+            {
+                CornerRadius = new CornerRadius(7),
+                Margin = new Thickness(2, 0, 2, 6),
+                Padding = new Thickness(2, 4, 2, 4),
+                Background = isToday ? new SolidColorBrush(WpfColor.FromRgb(39, 58, 89)) : new SolidColorBrush(WpfColor.FromRgb(22, 39, 64)),
+                BorderBrush = isToday ? new SolidColorBrush(WpfColor.FromRgb(125, 131, 196)) : new SolidColorBrush(WpfColor.FromRgb(43, 62, 93)),
+                BorderThickness = new Thickness(1),
+                Child = new StackPanel
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = dayLabel,
+                            FontSize = 11,
+                            FontWeight = FontWeights.SemiBold,
+                            Foreground = (WpfBrush)FindResource("BrightText"),
+                            TextAlignment = TextAlignment.Center
+                        },
+                        new TextBlock
+                        {
+                            Text = weekStart.AddDays(dayIndex).ToString("MMM d", CultureInfo.CurrentCulture),
+                            FontSize = 9,
+                            Foreground = (WpfBrush)FindResource("SoftText"),
+                            TextAlignment = TextAlignment.Center,
+                            Margin = new Thickness(0, 2, 0, 0)
+                        }
+                    }
+                }
+            };
+            panel.Children.Add(heading);
+
+            var entriesPanel = new StackPanel();
+            if (dayEntries.Count == 0)
+            {
+                entriesPanel.Children.Add(new TextBlock
+                {
+                    Text = "No timers",
+                    FontSize = 9,
+                    Foreground = (WpfBrush)FindResource("SoftText"),
+                    TextAlignment = TextAlignment.Center,
+                    TextWrapping = TextWrapping.Wrap,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(2, 10, 2, 0)
+                });
+            }
+            else
+            {
+                foreach (var item in dayEntries)
+                {
+                    var cardText = new TextBlock
+                    {
+                        Text = $"{item.StartTime.ToString("t", CultureInfo.CurrentCulture)}\n{ScheduleActionLabel(item.ActionRequest.Action)}{(item.SkipCountdown ? "\nWarning now" : string.Empty)}{(!item.IsEnabled ? "\nDisabled" : string.Empty)}",
+                        FontSize = 10,
+                        FontWeight = FontWeights.SemiBold,
+                        TextAlignment = TextAlignment.Center,
+                        TextWrapping = TextWrapping.Wrap,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+                    };
+                    var card = new WpfButton
+                    {
+                        Tag = item.Id,
+                        Content = cardText,
+                        MinHeight = item.SkipCountdown || !item.IsEnabled ? 72 : 58,
+                        Padding = new Thickness(3, 6, 3, 6),
+                        Margin = new Thickness(2, 0, 2, 7),
+                        FontSize = 10,
+                        Background = item.IsEnabled
+                            ? new SolidColorBrush(WpfColor.FromRgb(31, 54, 82))
+                            : new SolidColorBrush(WpfColor.FromRgb(23, 35, 53)),
+                        BorderBrush = item.IsEnabled
+                            ? new SolidColorBrush(WpfColor.FromRgb(60, 87, 120))
+                            : new SolidColorBrush(WpfColor.FromRgb(48, 63, 82)),
+                        Opacity = item.IsEnabled ? 1 : 0.58,
+                        ToolTip = $"{item.StartTime.ToString("t", CultureInfo.CurrentCulture)} · {ScheduleActionLabel(item.ActionRequest.Action)} · {(item.IsEnabled ? "Enabled" : "Disabled")}{(item.SkipCountdown ? " · Starts at warning" : string.Empty)}"
+                    };
+                    card.Click += ScheduleCard_Click;
+                    entriesPanel.Children.Add(card);
+                }
+            }
+
+            var scroller = new ScrollViewer
+            {
+                Content = entriesPanel,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                CanContentScroll = false,
+                Margin = new Thickness(1, 0, 1, 0)
+            };
+            Grid.SetRow(scroller, 1);
+            panel.Children.Add(scroller);
+
+            var addDayButton = new WpfButton
+            {
+                Content = "+ Add",
+                Tag = day,
+                MinHeight = 30,
+                Padding = new Thickness(3, 3, 3, 3),
+                Margin = new Thickness(2, 3, 2, 2),
+                FontSize = 9,
+                Background = new SolidColorBrush(WpfColor.FromRgb(26, 42, 66)),
+                BorderBrush = new SolidColorBrush(WpfColor.FromRgb(49, 72, 103)),
+                ToolTip = $"Add a timer for {dayLabel}"
+            };
+            addDayButton.Click += AddScheduleForDayButton_Click;
+            Grid.SetRow(addDayButton, 2);
+            panel.Children.Add(addDayButton);
+
+            var cardBorder = new Border
+            {
+                Margin = new Thickness(0, 0, 6, 0),
+                Padding = new Thickness(5),
+                CornerRadius = new CornerRadius(9),
+                Background = isToday ? new SolidColorBrush(WpfColor.FromRgb(22, 38, 62)) : new SolidColorBrush(WpfColor.FromRgb(16, 27, 47)),
+                BorderBrush = isToday ? new SolidColorBrush(WpfColor.FromRgb(125, 131, 196)) : new SolidColorBrush(WpfColor.FromRgb(43, 62, 93)),
+                BorderThickness = new Thickness(1),
+                Child = panel
+            };
+            ScheduleWeekGrid.Children.Add(cardBorder);
+        }
+    }
+
+    private static string ScheduleActionLabel(PowerAction action) => action switch
+    {
+        PowerAction.Sleep => "Sleep",
+        PowerAction.ShutDown => "Shut down",
+        PowerAction.Restart => "Restart",
+        PowerAction.Lock => "Lock",
+        PowerAction.CloseApp => "Close app",
+        PowerAction.RunProgram => "Run program",
+        _ => "Action"
+    };
+
+    private void AddScheduleForDayButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfButton { Tag: DayOfWeek day }) EditSchedule(null, day);
     }
 
     private void SettingsToggleButton_Click(object sender, RoutedEventArgs e)
@@ -712,6 +904,14 @@ public partial class MainWindow : Window
             return;
         }
 
+        var scheduleError = WeeklyScheduleValidation.Validate(_scheduleDraft);
+        if (scheduleError is not null)
+        {
+            SetError(scheduleError);
+            SettingsTabs.SelectedIndex = 4;
+            return;
+        }
+
         var sleepMusicSelectionId = GetAudioSelectionId(SleepMusicTrackCombo);
         if (SleepMusicEnabledCheck.IsChecked == true
             && sleepMusicSelectionId == AudioSelectionIds.CustomFile && string.IsNullOrWhiteSpace(_sleepMusicFilePath))
@@ -756,6 +956,7 @@ public partial class MainWindow : Window
         updated.EndSoundSelectionId = endSoundSelectionId;
         updated.EndSoundFilePath = _endSoundFilePath;
         updated.EndSoundVolume = (int)Math.Round(EndSoundVolumeSlider.Value);
+        updated.WeeklySchedules = _scheduleDraft.Select(schedule => schedule.Clone()).ToList();
         _app.SaveSettings(updated);
     }
 

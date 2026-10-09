@@ -18,7 +18,10 @@ public partial class App : System.Windows.Application
     private DesktopWidgetWindow? _widget;
     private DispatcherTimer? _displayTimer;
     private TimerAudioCoordinator? _audio;
+    private readonly WeeklyScheduleService _weeklyScheduleService = new();
     private readonly SettingsStore _settingsStore = new();
+    private bool _powerActionInProgress;
+    private int _powerActionPending;
 
     internal AppSettings Settings { get; private set; } = new();
     internal TimerEngine Engine { get; private set; } = null!;
@@ -42,6 +45,7 @@ public partial class App : System.Windows.Application
         }
 
         Settings = _settingsStore.Load();
+        _weeklyScheduleService.UpdateSchedules(Settings.WeeklySchedules);
         Engine = new TimerEngine(new SystemMonotonicClock(), new ThreadPoolOneShotScheduler());
         _audio = new TimerAudioCoordinator(new AudioPlaybackBackend());
         _audio.PlaybackFailed += message => Dispatcher.BeginInvoke(() =>
@@ -51,7 +55,11 @@ public partial class App : System.Windows.Application
         });
         _audio.PreviewStateChanged += () => Dispatcher.BeginInvoke(() => MainView?.RefreshAudioPreviewState());
         Engine.SnapshotChanged += snapshot => Dispatcher.BeginInvoke(() => HandleSnapshot(snapshot));
-        Engine.PowerActionRequested += action => Dispatcher.BeginInvoke(() => PerformPowerAction(action));
+        Engine.PowerActionRequested += action =>
+        {
+            if (Interlocked.Exchange(ref _powerActionPending, 1) != 0) return;
+            Dispatcher.BeginInvoke(() => PerformPowerAction(action));
+        };
 
         _pipeCancellation = new CancellationTokenSource();
         _ = ListenForSecondLaunchAsync(_pipeCancellation.Token);
@@ -67,7 +75,11 @@ public partial class App : System.Windows.Application
             ToggleWidget);
 
         _displayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _displayTimer.Tick += (_, _) => RefreshLiveDisplay();
+        _displayTimer.Tick += (_, _) =>
+        {
+            RefreshLiveDisplay();
+            EvaluateWeeklySchedule();
+        };
         _displayTimer.Start();
 
         if (Settings.ShowWidgetOnStartup) ShowWidget();
@@ -146,6 +158,7 @@ public partial class App : System.Windows.Application
                 throw;
             }
             Settings = settings.Clone();
+            _weeklyScheduleService.UpdateSchedules(Settings.WeeklySchedules);
             _audio?.ApplySettings(
                 Settings,
                 AudioAssetCatalog.ResolveMusic(Settings),
@@ -317,37 +330,86 @@ public partial class App : System.Windows.Application
         _widget?.Refresh(snapshot);
     }
 
+    private void EvaluateWeeklySchedule()
+    {
+        if (Engine is null) return;
+        var active = _powerActionInProgress
+            || Volatile.Read(ref _powerActionPending) != 0
+            || Engine.GetSnapshot().Phase != TimerPhase.Idle;
+        var schedule = _weeklyScheduleService.Evaluate(DateTime.Now, active);
+        if (schedule is not null) StartScheduledTimer(schedule);
+    }
+
+    private void StartScheduledTimer(WeeklyScheduleEntry schedule)
+    {
+        if (_powerActionInProgress
+            || Volatile.Read(ref _powerActionPending) != 0
+            || Engine.GetSnapshot().Phase != TimerPhase.Idle) return;
+
+        var warningDuration = Settings.ShowWarning
+            ? TimeSpan.FromSeconds(Settings.WarningSeconds)
+            : TimeSpan.Zero;
+        var snoozeDuration = TimeSpan.FromMinutes(Settings.SnoozeMinutes);
+        if (schedule.SkipCountdown)
+        {
+            Engine.StartInWarning(warningDuration, snoozeDuration, schedule.ActionRequest);
+        }
+        else
+        {
+            Engine.Start(
+                TimeSpan.FromMinutes(Settings.InitialTimerMinutes),
+                warningDuration,
+                snoozeDuration,
+                schedule.ActionRequest);
+        }
+
+        _audio?.StartTimer(Settings, AudioAssetCatalog.ResolveMusic(Settings), AudioAssetCatalog.ResolveEndSound(Settings));
+        MainView.SetNotice(schedule.SkipCountdown
+            ? Settings.ShowWarning ? "Scheduled warning started." : "Scheduled action started without a warning."
+            : "Scheduled countdown started.");
+    }
+
     private async void PerformPowerAction(PowerActionRequest action)
     {
-        ClosePrompt();
-        _widget?.CompleteProgress();
+        if (_powerActionInProgress) return;
+        _powerActionInProgress = true;
         try
         {
-            if (_audio is not null)
-                await _audio.PrepareForPowerActionAsync(Engine.GetSnapshot().WarningEnabled);
-        }
-        catch (Exception)
-        {
-            MainView.SetNotice("Audio could not be played. Continuing with the selected timer action.");
-        }
-        try
-        {
-            if (action.Action == PowerAction.CloseApp)
+            ClosePrompt();
+            _widget?.CompleteProgress();
+            try
             {
-                var processName = Path.GetFileNameWithoutExtension(action.CloseAppProcessName?.Trim());
-                var progress = $"Asking {processName} to close gracefully. Waiting up to 30 seconds…";
-                MainView.SetNotice(progress);
-                if (!MainView.IsVisible) _tray?.ShowNotice(progress);
+                if (_audio is not null)
+                    await _audio.PrepareForPowerActionAsync(Engine.GetSnapshot().WarningEnabled);
             }
+            catch (Exception)
+            {
+                MainView.SetNotice("Audio could not be played. Continuing with the selected timer action.");
+            }
+            try
+            {
+                if (action.Action == PowerAction.CloseApp)
+                {
+                    var processName = Path.GetFileNameWithoutExtension(action.CloseAppProcessName?.Trim());
+                    var progress = $"Asking {processName} to close gracefully. Waiting up to 30 seconds…";
+                    MainView.SetNotice(progress);
+                    if (!MainView.IsVisible) _tray?.ShowNotice(progress);
+                }
 
-            var result = await PowerActions.ExecuteAsync(action);
-            MainView.SetNotice(result);
-            if (action.Action == PowerAction.CloseApp && !MainView.IsVisible) _tray?.ShowNotice(result);
+                var result = await PowerActions.ExecuteAsync(action);
+                MainView.SetNotice(result);
+                if (action.Action == PowerAction.CloseApp && !MainView.IsVisible) _tray?.ShowNotice(result);
+            }
+            catch (Exception exception)
+            {
+                MainView.SetPowerError(exception.Message);
+                ShowMainWindow();
+            }
         }
-        catch (Exception exception)
+        finally
         {
-            MainView.SetPowerError(exception.Message);
-            ShowMainWindow();
+            _powerActionInProgress = false;
+            Volatile.Write(ref _powerActionPending, 0);
         }
     }
 

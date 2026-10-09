@@ -16,6 +16,45 @@ public sealed record PowerActionRequest(
     string? CustomProgramPath = null,
     string? CustomProgramArguments = null);
 
+public sealed class WeeklyScheduleEntry
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public bool IsEnabled { get; set; }
+    public List<DayOfWeek> DaysOfWeek { get; set; } = [];
+    public TimeOnly StartTime { get; set; } = new(22, 0);
+    public bool SkipCountdown { get; set; }
+    public PowerActionRequest ActionRequest { get; set; } = new(PowerAction.Sleep);
+
+    public WeeklyScheduleEntry Clone() => new()
+    {
+        Id = Id,
+        IsEnabled = IsEnabled,
+        DaysOfWeek = [.. DaysOfWeek],
+        StartTime = StartTime,
+        SkipCountdown = SkipCountdown,
+        ActionRequest = ActionRequest with { }
+    };
+
+    public void Normalize()
+    {
+        if (Id == Guid.Empty) Id = Guid.NewGuid();
+        DaysOfWeek ??= [];
+        DaysOfWeek = DaysOfWeek
+            .Where(Enum.IsDefined)
+            .Distinct()
+            .OrderBy(day => (int)day)
+            .ToList();
+        ActionRequest ??= new PowerActionRequest(PowerAction.Sleep);
+        if (!Enum.IsDefined(ActionRequest.Action)) ActionRequest = new PowerActionRequest(PowerAction.Sleep);
+        ActionRequest = ActionRequest with
+        {
+            CloseAppProcessName = (ActionRequest.CloseAppProcessName ?? string.Empty).Trim(),
+            CustomProgramPath = (ActionRequest.CustomProgramPath ?? string.Empty).Trim(),
+            CustomProgramArguments = ActionRequest.CustomProgramArguments ?? string.Empty
+        };
+    }
+}
+
 public enum PromptMode
 {
     FullScreen,
@@ -75,8 +114,14 @@ public sealed class AppSettings
     public string EndSoundSelectionId { get; set; } = AudioSelectionIds.SoftChime;
     public string EndSoundFilePath { get; set; } = string.Empty;
     public int EndSoundVolume { get; set; } = 65;
+    public List<WeeklyScheduleEntry> WeeklySchedules { get; set; } = [];
 
-    public AppSettings Clone() => (AppSettings)MemberwiseClone();
+    public AppSettings Clone()
+    {
+        var clone = (AppSettings)MemberwiseClone();
+        clone.WeeklySchedules = WeeklySchedules.Select(schedule => schedule.Clone()).ToList();
+        return clone;
+    }
 
     public void Normalize()
     {
@@ -101,6 +146,17 @@ public sealed class AppSettings
             : EndSoundSelectionId.Trim();
         EndSoundFilePath = (EndSoundFilePath ?? string.Empty).Trim();
         EndSoundVolume = Math.Clamp(EndSoundVolume, 0, 100);
+        WeeklySchedules ??= [];
+        var scheduleIds = new HashSet<Guid>();
+        WeeklySchedules = WeeklySchedules
+            .Where(schedule => schedule is not null)
+            .Select(schedule =>
+            {
+                schedule.Normalize();
+                return schedule;
+            })
+            .Where(schedule => scheduleIds.Add(schedule.Id))
+            .ToList();
         CloseAppProcessName = (CloseAppProcessName ?? string.Empty).Trim();
         CustomProgramPath = (CustomProgramPath ?? string.Empty).Trim();
         CustomProgramArguments ??= string.Empty;

@@ -260,9 +260,9 @@
                     <TabControl.Resources>
                         <Style TargetType="TabItem">
                             <Setter Property="Foreground" Value="{StaticResource SoftText}" />
-                            <Setter Property="Padding" Value="16,10" />
-                            <Setter Property="Margin" Value="0,0,8,0" />
-                            <Setter Property="MinHeight" Value="54" />
+                            <Setter Property="Padding" Value="10,7" />
+                            <Setter Property="Margin" Value="0,0,6,0" />
+                            <Setter Property="MinHeight" Value="46" />
                             <Setter Property="HorizontalContentAlignment" Value="Center" />
                             <Setter Property="VerticalContentAlignment" Value="Center" />
                             <Setter Property="Template">
@@ -291,7 +291,7 @@
                         <ControlTemplate TargetType="TabControl">
                             <Grid KeyboardNavigation.TabNavigation="Local">
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                <UniformGrid IsItemsHost="True" Rows="1" Columns="5" Margin="0,0,0,12" />
+                                <UniformGrid IsItemsHost="True" Rows="1" Columns="6" Margin="0,0,0,10" />
                                 <Border Grid.Row="1" Background="#111D34" BorderBrush="#2B3E5D" BorderThickness="1"
                                         CornerRadius="18" Padding="17">
                                     <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" />
@@ -558,6 +558,24 @@
                             </Grid>
                         </Grid>
                     </TabItem>
+                    <TabItem Header="Schedule" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="1,0,10,0">
+                                    <TextBlock Text="Weekly schedule" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource BrightText}" />
+                                    <TextBlock Text="Choose a card to edit it. Enabled schedules start at the selected local time."
+                                               FontSize="9" Foreground="{StaticResource SoftText}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="+ Add schedule" MinHeight="32" Padding="10,4"
+                                        FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Click="AddScheduleButton_Click" />
+                            </Grid>
+                            <UniformGrid x:Name="ScheduleWeekGrid" Grid.Row="1" Columns="7" MinHeight="250"
+                                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,11,0,0" />
+                        </Grid>
+                    </TabItem>
                     <TabItem Header="About">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -590,7 +608,7 @@
                     </TabItem>
                 </TabControl>
                 <Grid Grid.Row="2">
-                    <TextBlock Text="Changes are saved locally. Audio settings apply to a running timer; timer settings apply next start."
+                    <TextBlock Text="Changes are saved locally. Schedules and timer settings apply when saved; audio changes apply to a running timer."
                                FontSize="10" Foreground="{StaticResource SoftText}" VerticalAlignment="Center" />
                 </Grid>
             </Grid>

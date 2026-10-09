@@ -98,6 +98,43 @@ public sealed class TimerEngine : IDisposable
         SnapshotChanged?.Invoke(snapshot);
     }
 
+    /// <summary>Starts directly in the warning phase, or requests the action immediately when warnings are disabled.</summary>
+    public void StartInWarning(TimeSpan warningDuration, TimeSpan snoozeDuration, PowerActionRequest action)
+    {
+        if (warningDuration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(warningDuration));
+        if (snoozeDuration <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(snoozeDuration));
+        ArgumentNullException.ThrowIfNull(action);
+        if (!Enum.IsDefined(action.Action)) throw new ArgumentOutOfRangeException(nameof(action));
+
+        TimerSnapshot snapshot;
+        var requestImmediately = warningDuration == TimeSpan.Zero;
+        lock (_gate)
+        {
+            ThrowIfDisposed();
+            _warningDuration = warningDuration;
+            _snoozeDuration = snoozeDuration;
+            _action = action;
+            if (requestImmediately)
+            {
+                _version++;
+                _scheduled?.Dispose();
+                _scheduled = null;
+                _phase = TimerPhase.Idle;
+                _phaseDuration = TimeSpan.Zero;
+                _phaseStartedAt = _clock.GetTimestamp();
+                snapshot = SnapshotUnsafe();
+            }
+            else
+            {
+                BeginPhaseUnsafe(TimerPhase.Warning, warningDuration);
+                snapshot = SnapshotUnsafe();
+            }
+        }
+
+        SnapshotChanged?.Invoke(snapshot);
+        if (requestImmediately) PowerActionRequested?.Invoke(action);
+    }
+
     public void Snooze()
     {
         TimerSnapshot snapshot;

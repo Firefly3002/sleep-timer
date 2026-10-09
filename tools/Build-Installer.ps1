@@ -24,9 +24,13 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXIT
 
 $publishedExecutable = Join-Path $publishDirectory 'SleepTimer.exe'
 $publishedIcon = Join-Path $publishDirectory 'Assets\sleep-timer.ico'
+$sourceAudioDirectory = Join-Path $repoRoot 'src\SleepTimer.App\Assets\Audio'
+$publishedAudioDirectory = Join-Path $publishDirectory 'Assets\Audio'
 if (-not (Test-Path -LiteralPath $publishedExecutable)) { throw "Published executable not found: $publishedExecutable" }
 New-Item -ItemType Directory -Path (Split-Path -Parent $publishedIcon) -Force | Out-Null
 Copy-Item -LiteralPath $iconSource -Destination $publishedIcon -Force
+New-Item -ItemType Directory -Path $publishedAudioDirectory -Force | Out-Null
+Get-ChildItem -LiteralPath $sourceAudioDirectory -File | Copy-Item -Destination $publishedAudioDirectory -Force
 
 & $compiler /Qp $installerScript
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
