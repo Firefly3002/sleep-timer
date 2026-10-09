@@ -114,7 +114,7 @@ internal static class PowerActions
                 Thread.Sleep(200);
 
             if (closeRequested.Any(HasOpenWindow))
-                throw new InvalidOperationException($"'{processName}' still has an open window after {GracefulCloseTimeout.TotalSeconds:0} seconds. Sleep Timer did not force-close it; save your work and close it yourself if needed.");
+                throw new InvalidOperationException($"'{processName}' still has an open window after {GracefulCloseTimeout.TotalSeconds:0} seconds. Bedtime Timer did not force-close it; save your work and close it yourself if needed.");
 
             return $"'{processName}' closed its window gracefully.";
         }

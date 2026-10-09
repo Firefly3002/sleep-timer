@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="Sleep Timer Widget" Width="164" Height="60" MinWidth="150" MinHeight="56"
+        Title="Bedtime Timer Widget" Width="164" Height="60" MinWidth="150" MinHeight="56"
         Topmost="True" ShowInTaskbar="False" WindowStyle="None" ResizeMode="CanResize"
         AllowsTransparency="True" Background="Transparent" FontFamily="Segoe UI"
         Foreground="{StaticResource BrightText}" WindowStartupLocation="Manual"
@@ -35,7 +35,7 @@
             <Grid x:Name="WidgetClickSurface" Background="Transparent"
                   LostMouseCapture="Widget_ClickOrDrag_LostMouseCapture"
                   Panel.ZIndex="2"
-                  ToolTip="Click to open Sleep Timer · drag to move · resize from the corner">
+                  ToolTip="Click to open Bedtime Timer · drag to move · resize from the corner">
                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                     <!-- Dark offset copies create a crisp outline around the time over the changing widget background. -->
                     <TextBlock Text="{Binding Text, ElementName=WidgetTimeText}" FontSize="25" FontWeight="Bold"

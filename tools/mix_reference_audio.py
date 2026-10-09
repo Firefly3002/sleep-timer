@@ -1,4 +1,4 @@
-"""Create Sleep Timer nature tracks from three licensed Pixabay recordings.
+"""Create Bedtime Timer nature tracks from three licensed Pixabay recordings.
 
 Put the downloaded source MP3s in tools/audio-source/ (that folder is ignored by
 Git). FFmpeg equalizes and levels the recordings, blends an authored stereo chord
@@ -92,8 +92,8 @@ def mix_track(
             "-filter_complex", filter_graph,
             "-map", "[out]",
             "-map_metadata", "-1",
-            "-metadata", f"title={title} - Sleep Timer mix",
-            "-metadata", f"artist=Sleep Timer, with source audio by {source_credit}",
+            "-metadata", f"title={title} - Bedtime Timer mix",
+            "-metadata", f"artist=Sparkfly, with source audio by {source_credit}",
             "-c:a", "libmp3lame",
             "-b:a", "192k",
             "-ar", str(SAMPLE_RATE),

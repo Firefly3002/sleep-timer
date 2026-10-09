@@ -8,6 +8,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationIcon>Assets\sleep-timer.ico</ApplicationIcon>
+    <AssemblyTitle>Bedtime Timer</AssemblyTitle>
+    <Product>Bedtime Timer</Product>
+    <Company>Sparkfly</Company>
+    <Version>1.4.1</Version>
     <AssemblyName>SleepTimer</AssemblyName>
     <RootNamespace>SleepTimer.Desktop</RootNamespace>
   </PropertyGroup>

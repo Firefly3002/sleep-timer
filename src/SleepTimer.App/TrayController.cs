@@ -15,7 +15,7 @@ internal sealed class TrayController : IDisposable
     public TrayController(Action show, Action cancel, Action restart, Action settings, Action exit, Action toggleWidget)
     {
         var menu = new ContextMenuStrip();
-        menu.Items.Add("Show Sleep Timer", null, (_, _) => show());
+        menu.Items.Add("Show Bedtime Timer", null, (_, _) => show());
         _widgetItem = new ToolStripMenuItem("Show desktop widget", null, (_, _) => toggleWidget());
         menu.Items.Add(_widgetItem);
         _restartItem = new ToolStripMenuItem("Restart timer", null, (_, _) => restart());
@@ -33,12 +33,12 @@ internal sealed class TrayController : IDisposable
         _icon = new NotifyIcon
         {
             Icon = icon,
-            Text = "Sleep Timer",
+            Text = "Bedtime Timer",
             ContextMenuStrip = menu,
             Visible = true
         };
         _icon.DoubleClick += (_, _) => show();
-        _icon.BalloonTipTitle = "Sleep Timer";
+        _icon.BalloonTipTitle = "Bedtime Timer";
     }
 
     public void Update(TimerSnapshot snapshot)
@@ -47,8 +47,8 @@ internal sealed class TrayController : IDisposable
         _cancelItem.Enabled = active;
         _restartItem.Enabled = active;
         _icon.Text = active
-            ? $"Sleep Timer · {FormatRemaining(snapshot.Remaining)}"
-            : "Sleep Timer · idle";
+            ? $"Bedtime Timer · {FormatRemaining(snapshot.Remaining)}"
+            : "Bedtime Timer · idle";
     }
 
     public void SetWidgetVisible(bool visible) => _widgetItem.Text = visible ? "Hide desktop widget" : "Show desktop widget";

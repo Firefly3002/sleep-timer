@@ -4,7 +4,7 @@ $project = Join-Path $repoRoot 'src\SleepTimer.App\SleepTimer.App.csproj'
 $publishDirectory = Join-Path $repoRoot 'dist\win-x64'
 $iconSource = Join-Path $repoRoot 'src\SleepTimer.App\Assets\sleep-timer.ico'
 $installerScript = Join-Path $PSScriptRoot 'SleepTimerSetup.iss'
-$installerOutput = Join-Path $repoRoot 'dist\SleepTimerSetup.exe'
+$installerOutput = Join-Path $repoRoot 'dist\BedtimeTimerSetup.exe'
 
 $compilerCandidates = @(
     (Get-Command 'ISCC.exe' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue),

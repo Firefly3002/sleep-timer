@@ -38,7 +38,7 @@
                     <Image Source="/SleepTimer;component/Assets/sleep-timer.png" Width="28" Height="28" />
                     <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
                         <TextBlock x:Name="DialogTitleText" Text="A fresh start" FontSize="13" FontWeight="SemiBold" />
-                        <TextBlock Text="SLEEP TIMER" FontSize="8" FontWeight="Bold" Foreground="{StaticResource MoonGold}"
+                        <TextBlock Text="BEDTIME TIMER" FontSize="8" FontWeight="Bold" Foreground="{StaticResource MoonGold}"
                                    Margin="0,2,0,0" />
                     </StackPanel>
                 </StackPanel>

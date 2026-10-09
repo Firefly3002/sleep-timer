@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1 — 2026-10-09
+
+### Changed
+
+- Rebranded the Windows app as Bedtime Timer by Sparkfly across its windows, tray menu, installer, documentation, and audio credits.
+- Renamed the installer to `BedtimeTimerSetup.exe` while preserving the existing installation identity and saved settings.
+
 ## 1.4.0 — 2026-10-09
 
 ### Added
@@ -12,5 +19,5 @@
 ### Behavior
 
 - Scheduled entries use the saved countdown duration and the existing warning and snooze settings.
-- Schedules run while Sleep Timer is open or minimized to the tray. Missed times and occurrences that conflict with an active timer are skipped.
+- Schedules run while Bedtime Timer is open or minimized to the tray. Missed times and occurrences that conflict with an active timer are skipped.
 - Schedule settings are saved locally; older settings load with an empty schedule list.

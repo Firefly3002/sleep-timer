@@ -278,7 +278,7 @@ public partial class App : System.Windows.Application
         {
             if (!ConfirmAction(
                 "Stop timer and exit?",
-                "Your timer only runs while Sleep Timer is open.",
+                "Your timer only runs while Bedtime Timer is open.",
                 "Exiting now will cancel the active timer and its upcoming power action.",
                 "Exit and stop")) return;
             _audio?.CancelTimer();

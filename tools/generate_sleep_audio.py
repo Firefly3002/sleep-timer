@@ -1,4 +1,4 @@
-"""Create the original, sample-free sleep audio bundled with Sleep Timer.
+"""Create the original, sample-free sleep audio bundled with Bedtime Timer.
 
 Requires Python 3 and FFmpeg (for compressing the three longer loops to MP3).
 The short one-shot cues are written as WAV files.

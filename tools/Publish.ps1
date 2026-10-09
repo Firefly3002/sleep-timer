@@ -14,13 +14,13 @@ Copy-Item -LiteralPath (Join-Path $repoRoot 'src\SleepTimer.App\Assets\sleep-tim
 if (-not (Test-Path -LiteralPath $icon)) { throw "Published icon not found: $icon" }
 
 $desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory)
-$shortcutPath = Join-Path $desktop 'Sleep Timer.lnk'
+$shortcutPath = Join-Path $desktop 'Bedtime Timer.lnk'
 $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $executable
 $shortcut.WorkingDirectory = $output
 $shortcut.IconLocation = "$icon,0"
-$shortcut.Description = 'Start your saved Sleep Timer.'
+$shortcut.Description = 'Start your saved Bedtime Timer.'
 $shortcut.Save()
 
 Write-Output "Published: $executable"

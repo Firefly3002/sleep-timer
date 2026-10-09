@@ -1,6 +1,6 @@
-#define AppName "Sleep Timer"
-#define AppVersion "1.4.0"
-#define AppPublisher "Sleep Timer"
+#define AppName "Bedtime Timer"
+#define AppVersion "1.4.1"
+#define AppPublisher "Sparkfly"
 #define AppExecutable "SleepTimer.exe"
 
 [Setup]
@@ -15,7 +15,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 OutputDir=..\dist
-OutputBaseFilename=SleepTimerSetup
+OutputBaseFilename=BedtimeTimerSetup
 SetupIconFile=..\src\SleepTimer.App\Assets\sleep-timer.ico
 UninstallDisplayIcon={app}\Assets\sleep-timer.ico
 WizardStyle=modern
@@ -34,6 +34,6 @@ Source: "..\dist\win-x64\Assets\Audio\*"; DestDir: "{app}\Assets\Audio"; Flags: 
 Source: "..\src\SleepTimer.App\Assets\sleep-timer.ico"; DestDir: "{app}\Assets"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Sleep Timer"; Filename: "{app}\{#AppExecutable}"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\sleep-timer.ico"
-Name: "{group}\Uninstall Sleep Timer"; Filename: "{uninstallexe}"; IconFilename: "{uninstallexe}"
-Name: "{autodesktop}\Sleep Timer"; Filename: "{app}\{#AppExecutable}"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\sleep-timer.ico"; Tasks: desktopicon
+Name: "{group}\Bedtime Timer"; Filename: "{app}\{#AppExecutable}"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\sleep-timer.ico"
+Name: "{group}\Uninstall Bedtime Timer"; Filename: "{uninstallexe}"; IconFilename: "{uninstallexe}"
+Name: "{autodesktop}\Bedtime Timer"; Filename: "{app}\{#AppExecutable}"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\sleep-timer.ico"; Tasks: desktopicon

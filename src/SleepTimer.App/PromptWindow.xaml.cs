@@ -38,8 +38,8 @@ public partial class PromptWindow : Window
         _compactFloatingPrompt = !_fullScreenPrompt;
         if (_isPreview)
         {
-            Title = "Sleep Timer · Warning Preview";
-            PromptTitleText.Text = "Sleep Timer · Warning Preview";
+            Title = "Bedtime Timer · Warning Preview";
+            PromptTitleText.Text = "Bedtime Timer · Warning Preview";
             PromptTitleCloseButton.ToolTip = "Close preview";
             FooterNotice.Text = "PREVIEW ONLY · no timer or action will run.";
             FooterNotice.Foreground = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource("MoonGold");

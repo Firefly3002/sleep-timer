@@ -33,6 +33,6 @@ internal static class WindowsStartupRegistration
             && string.Equals(Path.GetExtension(processPath), ".exe", StringComparison.OrdinalIgnoreCase))
             return processPath;
 
-        throw new InvalidOperationException("Could not find Sleep Timer’s Windows executable to add it to sign-in startup.");
+        throw new InvalidOperationException("Could not find Bedtime Timer’s Windows executable to add it to sign-in startup.");
     }
 }

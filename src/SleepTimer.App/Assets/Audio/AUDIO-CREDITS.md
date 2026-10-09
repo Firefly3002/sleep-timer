@@ -1,8 +1,8 @@
-# Sleep Timer audio credits
+# Bedtime Timer audio credits
 
 ## App-authored audio
 
-Moonlit ambient, Soft piano, and the six end cues (Soft chime, Warm bell, Night bird, Moon sparkle, Stardust, and Dream portal) are original procedural compositions generated for Sleep Timer by `tools/generate_sleep_audio.py`. They contain no third-party audio samples.
+Moonlit ambient, Soft piano, and the six end cues (Soft chime, Warm bell, Night bird, Moon sparkle, Stardust, and Dream portal) are original procedural compositions generated for Bedtime Timer by Sparkfly using `tools/generate_sleep_audio.py`. They contain no third-party audio samples.
 
 The YouTube compilation [“15 Magic Sound Effects” by Pizza Hunter Sound](https://www.youtube.com/watch?v=n-s0YCWeqT4) was provided as a creative reference for adding magical-style cues. Its audio is not included, sampled, or copied in the app.
 
@@ -12,7 +12,7 @@ The YouTube compilation [“15 Magic Sound Effects” by Pizza Hunter Sound](htt
 - **Night forest** is an edited, repeat-ready mix based on “Night Forest with Frogs and Crickets for Sleep” by **Eryliaa**, published on Pixabay December 17, 2025: https://pixabay.com/sound-effects/nature-night-forest-with-frogs-and-crickets-for-sleep-451153/
 - **Ocean waves** is an edited, repeat-ready mix based on “Gentle Ocean Waves Mix (2018)” by **esh9419 (Freesound)**, hosted on Pixabay and published May 11, 2022: https://pixabay.com/sound-effects/nature-gentle-ocean-waves-mix-2018-19693/
 
-The recordings are used under the Pixabay Content License (https://pixabay.com/service/license-summary/). The app's rain and forest versions are equalized, leveled, blended with a Sleep Timer-authored stereo chord pad, crossfaded at the repeat point, and peak-limited. The ocean mix keeps the rolling-wave recording free of musical layers, with level and tonal adjustments, a loop crossfade, and peak limiting. The unmodified Pixabay files are not included in the repository or installer. Contributor credit is included here.
+The recordings are used under the Pixabay Content License (https://pixabay.com/service/license-summary/). The app's rain and forest versions are equalized, leveled, blended with a Bedtime Timer-authored stereo chord pad, crossfaded at the repeat point, and peak-limited. The ocean mix keeps the rolling-wave recording free of musical layers, with level and tonal adjustments, a loop crossfade, and peak limiting. The unmodified Pixabay files are not included in the repository or installer. Contributor credit is included here.
 
 The YouTube video “Sleep For 11 Hours Straight, High Quality Stereo Ocean Sounds Of Rolling Waves For Deep Sleeping” was a listening reference only; no part of its audio is included or copied: https://www.youtube.com/watch?v=bn9F19Hi1Lk
 

@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="Sleep Timer" Width="860" Height="720" MinWidth="760" MinHeight="640"
+        Title="Bedtime Timer" Width="860" Height="720" MinWidth="760" MinHeight="640"
         WindowStyle="None" ResizeMode="CanResize" Background="Transparent" Foreground="{StaticResource BrightText}"
         FontFamily="Segoe UI" WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
         Closing="Window_Closing" StateChanged="Window_StateChanged">
@@ -112,7 +112,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="7,0,0,0">
                     <Image Source="/SleepTimer;component/Assets/sleep-timer.png" Width="23" Height="23" />
-                    <TextBlock Text="Sleep Timer" FontSize="13" FontWeight="SemiBold" Margin="9,0,0,0"
+                    <TextBlock Text="Bedtime Timer" FontSize="13" FontWeight="SemiBold" Margin="9,0,0,0"
                                VerticalAlignment="Center" Foreground="#E7ECF5" />
                     <Ellipse x:Name="HeaderStar" Width="5" Height="5" Fill="{StaticResource MoonGold}"
                              Margin="8,2,0,0" VerticalAlignment="Center" />
@@ -383,7 +383,7 @@
                                 <CheckBox x:Name="StartOnLaunchCheck" Content="Start my saved timer when I open the app"
                                           ToolTip="Quick timers start a fresh timer when idle or add time to an active timer. The saved duration stays unchanged." />
                                 <CheckBox x:Name="StartAppOnWindowsStartupCheck"
-                                          Content="Open Sleep Timer when I sign in to Windows" Margin="0,10,0,0"
+                                          Content="Open Bedtime Timer when I sign in to Windows" Margin="0,10,0,0"
                                           ToolTip="This opens the app at sign-in. The saved-timer option above separately controls whether a countdown starts." />
                             </StackPanel>
                             <TextBlock Grid.Row="4" Text="Windows sign-in opens the app. The saved-timer option separately decides whether a countdown starts."
@@ -453,7 +453,7 @@
                             </Grid.RowDefinitions>
                             <TextBlock Text="Keep a small countdown near the corner of your screen." FontSize="11"
                                        Foreground="{StaticResource SoftText}" />
-                            <CheckBox x:Name="ShowWidgetOnStartupCheck" Grid.Row="1" Content="Show the desktop widget when Sleep Timer opens"
+                            <CheckBox x:Name="ShowWidgetOnStartupCheck" Grid.Row="1" Content="Show the desktop widget when Bedtime Timer opens"
                                       Margin="0,15,0,0" />
                             <CheckBox x:Name="WidgetTopmostCheck" Grid.Row="2" Content="Keep the widget above other windows"
                                       Margin="0,13,0,0" />
@@ -473,7 +473,7 @@
                                                FontSize="9" Foreground="{StaticResource SoftText}" Margin="1,2,0,0" />
                                 </StackPanel>
                                 <Border Grid.Column="1" Background="#182941" CornerRadius="12" Padding="13,10">
-                            <TextBlock Text="Click anywhere on the tiny pill to open Sleep Timer. Shift-click-drag to move it; resize from the corner."
+                            <TextBlock Text="Click anywhere on the tiny pill to open Bedtime Timer. Shift-click-drag to move it; resize from the corner."
                                                FontSize="10" Foreground="{StaticResource SoftText}" TextWrapping="Wrap" />
                                 </Border>
                             </Grid>
@@ -588,21 +588,23 @@
                                     <Image Source="/Assets/sleep-timer.png" Stretch="Uniform" />
                                 </Border>
                                 <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="About me" FontSize="18" FontWeight="SemiBold"
+                                    <TextBlock Text="About Bedtime Timer" FontSize="18" FontWeight="SemiBold"
                                                Foreground="{StaticResource BrightText}" />
-                                    <TextBlock Text="Sleep Timer · by Firefly" FontSize="11"
+                                    <TextBlock Text="Bedtime Timer · by Sparkfly" FontSize="11"
                                                Foreground="{StaticResource MoonGold}" Margin="0,4,0,0" />
                                 </StackPanel>
                             </StackPanel>
-                            <TextBlock Grid.Row="1" Text="I built Sleep Timer as a small, customizable Windows countdown with optional sleep music and gentle timer-end actions. Find the source, follow updates, or report an issue on GitHub."
+                            <TextBlock Grid.Row="1" Text="Bedtime Timer is free and made by Sparkfly. If it helps you wind down, you can leave an optional tip to support ongoing development. Explore more projects or visit the source on GitHub."
                                        FontSize="12" Foreground="{StaticResource SoftText}" TextWrapping="Wrap"
                                        Margin="1,18,12,0" MaxWidth="520" HorizontalAlignment="Left" />
                             <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,20,0,0">
-                                <Button Content="View Sleep Timer on GitHub" MinHeight="36" Padding="13,6"
+                                <Button Content="Leave an optional tip" MinHeight="36" Padding="13,6"
                                         Background="{StaticResource AccentViolet}" BorderBrush="#C5BCFF"
-                                        Foreground="#17152D" Click="OpenGitHubButton_Click" />
-                                <Button Content="More projects on Sparkfly" MinHeight="36" Padding="13,6"
+                                        Foreground="#17152D" Click="OpenDonationButton_Click" />
+                                <Button Content="More Sparkfly projects" MinHeight="36" Padding="13,6"
                                         Margin="10,0,0,0" Click="OpenSparkflyButton_Click" />
+                                <Button Content="View source on GitHub" MinHeight="36" Padding="13,6"
+                                        Margin="10,0,0,0" Click="OpenGitHubButton_Click" />
                             </StackPanel>
                         </Grid>
                     </TabItem>

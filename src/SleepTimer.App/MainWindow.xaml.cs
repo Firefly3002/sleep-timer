@@ -228,6 +228,9 @@ public partial class MainWindow : Window
     private void OpenGitHubButton_Click(object sender, RoutedEventArgs e)
         => OpenExternalUrl("https://github.com/Firefly3002/sleep-timer");
 
+    private void OpenDonationButton_Click(object sender, RoutedEventArgs e)
+        => OpenExternalUrl("https://sparkfly.online/donate");
+
     private void OpenSparkflyButton_Click(object sender, RoutedEventArgs e)
         => OpenExternalUrl("https://sparkfly.online/projects");
 

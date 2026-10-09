@@ -44,7 +44,7 @@ internal static class ActionPresentation
         PowerAction.ShutDown => "Your computer will shut down soon. Snooze for more time, or cancel the timer to stop it.",
         PowerAction.Restart => "Your computer will restart soon. Snooze for more time, or cancel the timer to stop it.",
         PowerAction.Lock => "Windows will lock soon. Snooze for more time, or cancel the timer to prevent it.",
-        PowerAction.CloseApp => $"Sleep Timer will ask {DisplayProcessName(request.CloseAppProcessName)} to close soon. Snooze for more time, or cancel the timer to keep it open.",
+        PowerAction.CloseApp => $"Bedtime Timer will ask {DisplayProcessName(request.CloseAppProcessName)} to close soon. Snooze for more time, or cancel the timer to keep it open.",
         PowerAction.RunProgram => $"{DisplayProgramName(request.CustomProgramPath)} will start soon. Snooze for more time, or cancel the timer to stop it.",
         _ => "Your timer is almost up. Snooze for more time, or cancel the timer to stop the selected action."
     };
